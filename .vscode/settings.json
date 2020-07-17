@@ -1,0 +1,10 @@
+{
+    "files.exclude": {
+        "**/*.o": true,
+        "iso": true
+    },
+    "files.associations": {
+        "sstream": "cpp",
+        "type_traits": "c"
+    }
+}
