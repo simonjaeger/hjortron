@@ -29,6 +29,12 @@ boot:
     volume_label                        times 11 db 0
     system_identifier                   dq 0
 
+; TODO: Use BPB to compute values.
+FAT1_SEGMENT equ 0x7E00
+FAT2_SEGMENT equ FAT1_SEGMENT + 512 * 9
+ROOT_SEGMENT equ FAT2_SEGMENT + 512 * 9
+DATA_SEGMENT equ ROOT_SEGMENT + 512 * 14
+
 start:
     cli
 
@@ -40,11 +46,19 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
-    ; Read root directory.
+    ; Read FAT1.
     xor ax, ax
     mov es, ax                  ; Destination segment.
-    mov bx, 0x9000              ; Destination offset.
-    mov si, 19                  ; First sector of root directory.
+    mov bx, FAT1_SEGMENT        ; Destination offset.
+    mov si, 1                   ; First sector.
+    mov al, 9                   ; Number of sectors.
+    ; mov dl, dl                ; Drive "should" be set by BIOS.
+    call read16
+
+    ; Read root directory.
+    xor ax, ax
+    mov bx, ROOT_SEGMENT        ; Destination offset.
+    mov si, 19                  ; First sector.
     mov al, 14                  ; Number of sectors.
     ; mov dl, dl                ; Drive "should" be set by BIOS.
     call read16
@@ -52,30 +66,69 @@ start:
 
 
 
+
+
     mov cx, [directory_entries]
-    mov ax, 0x9000
+    mov di, ROOT_SEGMENT
 
 .loop:
-
     push cx
 
     mov cx, 11
-    mov si, File
-    mov di, ax
+    mov si, test_file
+    ; mov di, ax
 
     repe cmpsb
-
     jnz .cont
+
+    ; File found...
+    mov si, file_found
+    call puts
+
+
+    ; add di, 0x1A
+    mov si, [di-11+0x1A]    ; Get cluster.
+    ; dec si
+
+    sub si, 2
+    add si, 1+9+9+14
+
+    ; Read test.
+    xor ax, ax
+    mov bx, 0x9000              ; Destination offset.
+
+    mov al, 1                  ; Number of sectors.
+    ; mov dl, dl                ; Drive "should" be set by BIOS.
+    call read16
+
+
+
+    ; dec ax
+    ; ; mov bx, 12
+    ; ; mul bx
+    ; mov ax, FAT1_SEGMENT
+    ; add ax, 0
+
+    ; mov di, ax
+    ; mov ax, [di]
     
-    mov si, ax
+    ; ; mov si, [FAT1_SEGMENT + si*12]
+    ; ; mov si, 0x5445
+
+    ; ; cmp ax, 0x0003
+    ; and ax, 0000111111111111b
+    ; cmp ax, 0x0FFF
+    ; jne .cont
+
+    mov si, 0x9000
+    ; mov si, file_found
     call puts
 
 .cont:
 
     pop cx
 
-
-    add ax, 0x20
+    add di, 0x20
     dec cx
     jnz .loop
 
@@ -92,7 +145,8 @@ halt:
     hlt
 
 
-    File db "TEST    BIN"
+    test_file db "TEST    BIN"
+    file_found db "Found file!", 0
 
 
 
