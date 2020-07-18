@@ -7,9 +7,9 @@ OBJ2 = ${wildcard src/boot/boot16.o}
 CC = ${HOME}/opt/htools/bin/i686-elf-g++
 CFLAGS = -nostdlib -ffreestanding -std=c++11 -mno-red-zone -fno-exceptions -nostdlib -fno-rtti -Wall -Wextra -Werror
 
-bin2: boot
+fda: boot kernel
 	mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/os512.bin -Xlinker --defsym=SECTOR_SIZE=512 -T linker2.ld $(OBJ2)
+	sudo ./scripts/build-fda.sh
 
 bin: boot kernel
 	mkdir -p bin
@@ -18,7 +18,7 @@ bin: boot kernel
 
 .PHONY: boot
 boot:
-	+$(MAKE) -C src/boot
+	+$(MAKE) -C boot
 
 .PHONY: kernel
 kernel:
@@ -34,7 +34,7 @@ iso: bin
 
 .PHONY: clean
 clean:
-	+$(MAKE) -C src/boot clean
+	+$(MAKE) -C boot clean
 	+$(MAKE) -C src/kernel clean
 	rm bin -rf
 	rm iso -rf
