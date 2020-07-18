@@ -1,4 +1,4 @@
 @ECHO OFF
-CMD /C bash -c "cd .. && make clean && make bin" || EXIT /b
+CMD /C bash -c "cd .. && make clean && make fdd" || EXIT /b
 CLS
-CMD /C qemu-system-x86_64 -fda ../bin/os512.bin -serial stdio
+CMD /C qemu-system-x86_64 -fda ../bin/fdd.bin -serial stdio

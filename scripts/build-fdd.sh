@@ -15,6 +15,7 @@ sudo mount /dev/loop0 /mnt -t msdos -o "fat=12"
 
 # Copy files.
 sudo cp boot/bin/test.bin /mnt
+sudo cp kernel/bin/kernel.bin /mnt
 
 # Unmount and destroy device.
 sudo umount /mnt
