@@ -2,9 +2,14 @@ OBJ = ${wildcard src/boot/*.o} \
 	${wildcard src/kernel/*.o} \
 	${wildcard src/kernel/**/*.o} \
 	${wildcard src/kernel/**/**/*.o}
+OBJ2 = ${wildcard src/boot/boot16.o}
 
 CC = ${HOME}/opt/htools/bin/i686-elf-g++
 CFLAGS = -nostdlib -ffreestanding -std=c++11 -mno-red-zone -fno-exceptions -nostdlib -fno-rtti -Wall -Wextra -Werror
+
+bin2: boot
+	mkdir -p bin
+	$(CC) $(CFLAGS) -o bin/os512.bin -Xlinker --defsym=SECTOR_SIZE=512 -T linker2.ld $(OBJ2)
 
 bin: boot kernel
 	mkdir -p bin
