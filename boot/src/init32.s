@@ -10,10 +10,6 @@ init32:
 	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-    
-    ; Get boot drive.
-    mov dx, 0x0                 ; TODO. Fix...
-    mov [boot_drive], dl        ; TODO: Store in init16.
 
     ; Get CPU vendor.
     mov eax, 0
@@ -53,6 +49,7 @@ data:
     gdt: dd GDT
 
     ; Drive.
+    global boot_drive
     boot_drive: db 0
 
     ; CPU.

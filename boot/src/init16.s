@@ -3,11 +3,16 @@ bits 16
 
 global init16
 init16:
+    ; Load from boot.
+    pop dx
+    extern boot_drive
+    mov byte [boot_drive], dl
+
     ; Enable A20 address line.
     int 0x15    
     
     ; Set VGA text mode 3.
-    mov ax, 0x3                 ; Set VGA text mode 3.
+    mov ax, 0x3
     int 0x10            
 
     ; Disable cursor.

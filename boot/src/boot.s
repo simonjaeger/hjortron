@@ -94,6 +94,8 @@ start:
     call read_file
 
     ; Jump to INIT.BIN.
+    mov dl, byte [boot_drive]
+    push dx
     jmp INIT_SEGMENT
 
 error:
