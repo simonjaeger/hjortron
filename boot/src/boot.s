@@ -46,7 +46,7 @@ start:
     ; Otherwise, trust the BPB.
     mov al, dl
     and al, 0x80
-    jz .read
+    jz .load
 
     mov ah, 0x8
     int 0x13
@@ -54,7 +54,7 @@ start:
     mov byte [HEADS_PER_CYLINDER], dh
     mov byte [SECTORS_PER_TRACK], cl
 
-.read:
+.load:
     ; Read FAT1.
     xor ax, ax
     mov es, ax                  ; Destination segment.
@@ -68,7 +68,6 @@ start:
     call find_file
 
     ; Load INIT.BIN.
-    mov ax, [di+0x1A]
     mov bx, INIT_SEGMENT
     call read_file
 
@@ -77,10 +76,9 @@ start:
     call find_file
 
     ; Load KERNEL.BIN.
-    mov ax, 0x1000
-    mov es, ax
-    mov ax, [di+0x1A]
-    mov bx, 0
+    mov bx, 0x1000
+    mov es, bx
+    xor bx, bx
     call read_file
 
     ; Jump to INIT.BIN.
@@ -107,8 +105,9 @@ data:
     DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14 * 1
     INIT_SEGMENT            equ 0x1000
 
-    BUFFER      equ ROOT_DIRECTORY_SEGMENT
-    BUFFER_MAX  equ ROOT_DIRECTORY_SEGMENT+512
+    BUFFER          equ ROOT_DIRECTORY_SEGMENT
+    BUFFER_MAX      equ ROOT_DIRECTORY_SEGMENT+512
+    FAT_ENTRY_SIZE equ 0x20
 
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
@@ -124,6 +123,7 @@ data:
 ; si = filename
 ;
 ; Output:
+; ax = cluster
 ; di = entry
 
 find_file:
@@ -172,7 +172,7 @@ find_file:
 
     jz .end
 
-    add di, 0x20                ; Next entry in directory.
+    add di, FAT_ENTRY_SIZE      ; Next entry in directory.
 
     dec ax
     jnz .loop
@@ -182,6 +182,7 @@ find_file:
     jmp error
 
 .end:
+    mov ax, [di+0x1A]           ; Set cluster.
     ret
 
 ; read_file
@@ -197,8 +198,21 @@ read_file:
 .loop:
     ; Compute LBA of cluster.
     mov si, word [cluster]
-    sub si, 2                   ; Reserved.
-    add si, 1+9+9+14            ; Data segment.
+    sub si, 2                   ; Reserved sectors.
+    add si, word [RESERVED_SECTORS]
+    add si, word [SECTORS_PER_FAT]
+    add si, word [SECTORS_PER_FAT]
+
+    ; Compute root clusters.
+    mov ax, word [DIRECTORY_ENTRIES]
+    mov cx, FAT_ENTRY_SIZE
+    mul cx
+    mov cx, word [BYTES_PER_SECTOR]
+    div cx
+    xor cx, cx
+    mov cl, byte [SECTORS_PER_CLUSTER]
+    div cx
+    add si, ax                  ; Add root clusters to sector offset.
 
     mov al, [SECTORS_PER_CLUSTER] ; Number of sectors.
     call read16
