@@ -40,6 +40,21 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
+    mov byte [boot_drive], dl
+
+    ; Read drive parameters if the boot drive was a HDD. 
+    ; Otherwise, trust the BPB.
+    mov al, dl
+    and al, 0x80
+    jz .read
+
+    mov ah, 0x8
+    int 0x13
+    inc dh
+    mov byte [HEADS_PER_CYLINDER], dh
+    mov byte [SECTORS_PER_TRACK], cl
+
+.read:
     ; Read FAT1.
     xor ax, ax
     mov es, ax                  ; Destination segment.
@@ -90,8 +105,8 @@ halt:
     hlt
 
 data:
-    boot_drive db 0
-    cluster dw 0
+    boot_drive  db 0
+    cluster     dw 0
 
     ; Pre-compute segments to save space for now. This could
     ; be done by using the BPB values instead.
@@ -104,6 +119,7 @@ data:
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
     FILE_KERNEL_BIN         db "KERNEL  BIN"
+    ERROR                   db "Error.", 0
     ERROR_FILE_NOT_FOUND    db "Could not find file.", 0
     ERROR_READ_FROM_DRIVE   db "Could not read from drive.", 0
 
@@ -188,7 +204,7 @@ read_file:
     pop bx                      ; Restore destination.
 
     ; Check if cluster is even or odd to find
-    ; where the 12 bits are.
+    ; the 12 bits.
     test ax, 1
     jz .low
 
