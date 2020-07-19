@@ -3,12 +3,11 @@ OUTPUT_FORMAT("binary")
 SECTIONS 
 {
     . = 0x7C00;
-    .boot :
+    .text :
     {
-        *(.boot)
         *(.text)
     }
-    .signature : AT(0x7DFE)
+    .sig : AT(0x7DFE)
     {
         SHORT(0xAA55);
     }

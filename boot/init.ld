@@ -1,10 +1,12 @@
-ENTRY(test)
+ENTRY(init)
 OUTPUT_FORMAT("binary")
 SECTIONS 
 {
-    . = 0x3000;
+    . = 0x1000;
     .text :
     {
         *(.text)
+        FILL(0);
+        . = 0x800;
     }
 }

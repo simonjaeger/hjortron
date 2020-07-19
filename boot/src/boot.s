@@ -1,4 +1,4 @@
-section .boot
+section .text
 bits 16
 
 global boot
@@ -7,34 +7,27 @@ boot:
     jmp short start
     nop
 
-    oem_identifier                      dq 0
-    bytes_per_sector                    dw 0
-    sectors_per_cluster                 db 0
-    reserved_sectors                    dw 0
-    fats                                db 0
-    directory_entries                   dw 0
-    sectors                             dw 0
-    media_descriptor_type               db 0
-    sectors_per_fat                     dw 0
-    sectors_per_track                   dw 0
-    heads_per_cylinder                  dw 0
-    hidden_sectors                      dd 0
-    large_sectors                       dd 0
+    OEM_IDENTIFIER          dq 0
+    BYTES_PER_SECTOR        dw 0
+    SECTORS_PER_CLUSTER     db 0
+    RESERVED_SECTORS        dw 0
+    FATS                    db 0
+    DIRECTORY_ENTRIES       dw 0
+    SECTORS                 dw 0
+    MEDIA_DESCRIPTOR_TYPE   db 0
+    SECTORS_PER_FAT         dw 0
+    SECTORS_PER_TRACK       dw 0
+    HEADS_PER_CYLINDER      dw 0
+    HIDDEN_SECTORS          dd 0
+    LARGE_SECTORS           dd 0
 
     ; Extended boot record (FAT12).
-    drive_number                        db 0
-    reserved                            db 0
-    signature                           db 0
-    volume_identifier                   dd 0
-    volume_label                        times 11 db 0
-    system_identifier                   dq 0
-
-; Pre-computing segments to save space for now. This could
-; be done by using the BPB values instead.
-FAT1_SEGMENT equ 0x7C00 + 512 * 1
-FAT2_SEGMENT equ FAT1_SEGMENT + 512 * 9
-ROOT_SEGMENT equ FAT2_SEGMENT + 512 * 9
-DATA_SEGMENT equ ROOT_SEGMENT + 512 * 14
+    DRIVE_NUMBER        db 0
+    RESERVED            db 0
+    SIGNATURE           db 0
+    VOLUME_IDENTIFIER   dd 0
+    VOLUME_LABEL        times 11 db 0
+    SYSTEM_IDENTIFIER   dq 0
 
 start:
     cli
@@ -59,31 +52,37 @@ start:
     ; Read root directory.
     xor ax, ax
     mov es, ax                  ; Destination segment.
-    mov bx, ROOT_SEGMENT        ; Destination offset.
+    mov bx, ROOT_DIRECTORY_SEGMENT ; Destination offset.
     mov si, 1+9+9               ; First sector.
     mov al, 14                  ; Number of sectors.
     mov dl, byte [boot_drive]   ; Drive.
     call read16
 
+    ; Find INIT.BIN.
+    mov si, FILE_INIT_BIN
+    call find_file
 
+    ; Load INIT.BIN.
+    mov ax, [di+0x1A]
+    mov bx, INIT_SEGMENT
+    call read_file
 
-    mov si, FILE_TEST_BIN
-    call find
+    ; Find KERNEL.BIN.
+    mov si, FILE_INIT_BIN
+    call find_file
 
-    mov si, di
-    extern print
-    call print
+    ; Load KERNEL.BIN.
+    mov ax, 0x1000
+    mov es, ax
+    mov ax, [di+0x1A]
+    mov bx, 0
+    call read_file
 
-    mov ax, [di+0x1A]    ; Get cluster.
-
-    mov bx, 0x3000
-    call read
-
-    jmp 0x3000
-
-    jmp halt
+    ; Jump to INIT.BIN.
+    jmp INIT_SEGMENT
 
 error:
+    extern print
     call print
 
 halt:
@@ -93,20 +92,22 @@ halt:
     boot_drive db 0
     cluster dw 0
 
+data:
+    ; Pre-compute segments to save space for now. This could
+    ; be done by using the BPB values instead.
+    FAT1_SEGMENT            equ 0x7C00 + 512 * 1
+    FAT2_SEGMENT            equ FAT1_SEGMENT + 512 * 9
+    ROOT_DIRECTORY_SEGMENT  equ FAT2_SEGMENT + 512 * 9
+    DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14
+    INIT_SEGMENT            equ 0x1000
 
-    cluster_a dw 0
-    test_file db "TEST    BIN"
-    file_found db "Found file!", 0
-    done db "done!", 0
+    ; Strings.
+    FILE_INIT_BIN           db "INIT    BIN"
+    FILE_KERNEL_BIN         db "TEST    BIN"
+    ERROR_FILE_NOT_FOUND    db "Could not find file.", 0
+    ERROR_READ              db "Could not read from drive.", 0
 
-    FILE_FOUND            db "File found", 0
-    FILE_NOT_FOUND            db "File not found", 0
-
-    FILE_TEST_BIN            db "TEST    BIN"
-    FILE_KERNEL_BIN            db "TEST    BIN"
-
-
-; find
+; find_file
 ; Find a file in the root directory.
 ;
 ; Input:
@@ -115,9 +116,9 @@ halt:
 ; Output:
 ; di = entry
 
-find:
-    mov ax, [directory_entries] ; File count.
-    mov di, ROOT_SEGMENT
+find_file:
+    mov ax, [DIRECTORY_ENTRIES] ; File count.
+    mov di, ROOT_DIRECTORY_SEGMENT
 
 .loop:
     ; Store source and destination as they
@@ -140,20 +141,20 @@ find:
     jnz .loop
 
 .error:
-    mov si, FILE_NOT_FOUND
+    mov si, ERROR_FILE_NOT_FOUND
     jmp error
 
 .end:
     ret
 
-; read
+; read_file
 ; Read file from disk to memory.
 ;
 ; Input:
 ; es:bx = destination
 ; ax    = cluster
 
-read:
+read_file:
     mov word [cluster], ax      ; Store cluster.
 
 .loop:
@@ -162,17 +163,13 @@ read:
     sub si, 2                   ; Reserved.
     add si, 1+9+9+14            ; Data segment.
 
-    mov al, [sectors_per_cluster] ; Number of sectors.
+    mov al, [SECTORS_PER_CLUSTER] ; Number of sectors.
     mov dl, byte [boot_drive]   ; Drive.
     call read16
 
-    ; Temp.
-    mov si, bx
-    call print
-
     ; Increment destination.
-    mov ax, word [bytes_per_sector]
-    mov cx, word [sectors_per_cluster]
+    mov ax, word [BYTES_PER_SECTOR]
+    mov cx, word [SECTORS_PER_CLUSTER]
     mul cx
     add bx, ax
 
@@ -234,11 +231,11 @@ read16:
     ; H = (LBA / Sectors) % Heads
     ; S = (LBA % Sectors) + 1
     xor dx, dx
-    div word [sectors_per_track]
-    mov cl, dl  
+    div word [SECTORS_PER_TRACK]
+    mov cl, dl
     inc cl
     xor dx, dx
-    div word [heads_per_cylinder]
+    div word [HEADS_PER_CYLINDER]
     mov dh, dl
     mov ch, al
     shl ah, 6 
@@ -249,9 +246,13 @@ read16:
     pop ax                      ; Restore number of sectors.
 
     int 0x13                    ; Read sectors.
+    jnc .end
 
-    ; TODO: Check status and handle error.
+.error:
+    mov si, ERROR_READ
+    jmp error
 
+.end:
     popa
     retn
     

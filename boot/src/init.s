@@ -1,8 +1,8 @@
 section .text
 bits 16
 
-global test
-test:
+global init
+init:
 
     extern print
     mov si, LABEL
@@ -23,3 +23,4 @@ TIMES 1024 - ($ - $$) db 0
 db "Sector2", 0
 
 LABEL            db "Hello from TEST.BIN!", 0
+
