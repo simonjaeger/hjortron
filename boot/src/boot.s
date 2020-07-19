@@ -81,6 +81,8 @@ start:
     xor bx, bx
     call read_file
 
+    ; jmp halt
+
     ; Jump to INIT.BIN.
     push boot_drive
     jmp INIT_SEGMENT
@@ -107,7 +109,7 @@ data:
 
     BUFFER          equ ROOT_DIRECTORY_SEGMENT
     BUFFER_MAX      equ ROOT_DIRECTORY_SEGMENT+512
-    FAT_ENTRY_SIZE equ 0x20
+    FAT_ENTRY_SIZE  equ 0x20
 
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
@@ -217,6 +219,9 @@ read_file:
     mov al, [SECTORS_PER_CLUSTER] ; Number of sectors.
     call read16
 
+    ; mov si, ERROR
+    ; call print16
+
     ; Increment destination.
     mov ax, word [BYTES_PER_SECTOR]
     mov cx, word [SECTORS_PER_CLUSTER]
@@ -230,12 +235,55 @@ read_file:
     shr dx, 1                   ; Multiply by 1.5 bytes.
     add cx, dx
 
-    ; Read word from FAT.
+
+
+
+    ; ; Read word from FAT.
+    ; ; push bx                     ; Store destination.
+    ; push ax
+    ; push bx
+    ; push es
+
+    ; ; mov bx, FAT1_SEGMENT
+    ; ; add bx, cx
+    ; ; mov dx, word [bx]
+
+    ; mov ax, cx
+    ; mov bx, word [BYTES_PER_SECTOR]
+    ; div bx
+
+    ; push dx
+
+    ; mov si, 1
+    ; add si, ax
+    ; ; mov si, 1 ; TEMP
+
+    ; xor ax, ax
+    ; mov es, ax                  ; Destination segment.
+    ; mov bx, BUFFER              ; Destination offset.
+    ; mov al, 1                   ; Number of sectors.
+    ; call read16
+
+    ; pop dx
+
+    ; add dx, BUFFER
+    ; mov bx, dx
+    ; mov dx, word [bx]
+
+    ; pop es
+    ; pop bx
+    ; pop ax
+    ; ; pop bx                      ; Restore destination.
+
+
+   ; Read word from FAT.
     push bx                     ; Store destination.
     mov bx, FAT1_SEGMENT
     add bx, cx
     mov dx, word [bx]
     pop bx                      ; Restore destination.
+
+
 
     ; Check if cluster is even or odd to find
     ; the 12 bits.

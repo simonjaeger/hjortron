@@ -65,3 +65,6 @@ data:
     mmap_count: dd 0
     global mmap_entries
     mmap_entries: dd 0x8000
+
+    ; Strings.
+    ERROR db "Error.", 0
