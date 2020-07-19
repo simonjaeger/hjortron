@@ -4,6 +4,10 @@ fdd: boot kernel
 	mkdir -p bin
 	sudo ./scripts/build-fdd.sh
 
+hdd: boot kernel
+	mkdir -p bin
+	sudo ./scripts/build-hdd.sh
+
 .PHONY: boot
 boot:
 	+$(MAKE) -C boot

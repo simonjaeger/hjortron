@@ -96,16 +96,16 @@ data:
     ; Pre-compute segments to save space for now. This could
     ; be done by using the BPB values instead.
     FAT1_SEGMENT            equ 0x7C00 + 512 * 1
-    FAT2_SEGMENT            equ FAT1_SEGMENT + 512 * 9
-    ROOT_DIRECTORY_SEGMENT  equ FAT2_SEGMENT + 512 * 9
-    DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14
+    FAT2_SEGMENT            equ FAT1_SEGMENT + 512 * 9 * 1
+    ROOT_DIRECTORY_SEGMENT  equ FAT2_SEGMENT + 512 * 9 * 1
+    DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14 * 1
     INIT_SEGMENT            equ 0x1000
 
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
     FILE_KERNEL_BIN         db "KERNEL  BIN"
     ERROR_FILE_NOT_FOUND    db "Could not find file.", 0
-    ERROR_READ              db "Could not read from drive.", 0
+    ERROR_READ_FROM_DRIVE   db "Could not read from drive.", 0
 
 ; find_file
 ; Find a file in the root directory.
@@ -249,7 +249,7 @@ read16:
     jnc .end
 
 .error:
-    mov si, ERROR_READ
+    mov si, ERROR_READ_FROM_DRIVE
     jmp error
 
 .end:

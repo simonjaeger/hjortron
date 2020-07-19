@@ -32,12 +32,7 @@ init32:
     mov ebp, 0x90000
     mov esp, 0x90000
 
-    ; Print name.
-    mov esi, name
-    extern print32
-    call print32
-
-    ; ; Call kernel.
+    ; Call kernel.
     push data
     call 0x10000
     cli
@@ -73,6 +68,3 @@ data:
     mmap_count: dd 0
     global mmap_entries
     mmap_entries: dd 0x8000
-
-    
-name: db "(Boot32)", 0
