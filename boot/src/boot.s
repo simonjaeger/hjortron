@@ -68,7 +68,7 @@ start:
     call read_file
 
     ; Find KERNEL.BIN.
-    mov si, FILE_INIT_BIN
+    mov si, FILE_KERNEL_BIN
     call find_file
 
     ; Load KERNEL.BIN.
@@ -82,17 +82,17 @@ start:
     jmp INIT_SEGMENT
 
 error:
-    extern print
-    call print
+    extern print16
+    call print16
 
 halt:
     jmp halt
     hlt
 
+data:
     boot_drive db 0
     cluster dw 0
 
-data:
     ; Pre-compute segments to save space for now. This could
     ; be done by using the BPB values instead.
     FAT1_SEGMENT            equ 0x7C00 + 512 * 1
@@ -103,7 +103,7 @@ data:
 
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
-    FILE_KERNEL_BIN         db "TEST    BIN"
+    FILE_KERNEL_BIN         db "KERNEL  BIN"
     ERROR_FILE_NOT_FOUND    db "Could not find file.", 0
     ERROR_READ              db "Could not read from drive.", 0
 

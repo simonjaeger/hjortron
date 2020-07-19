@@ -1,14 +1,14 @@
 section .text
 bits 16
 
-; print
+; print16
 ; Print string using teletype output.
 ;
 ; Input:
 ; si = string
 
-global print
-print:
+global print16
+print16:
     pusha
     cld                         ; Clear direction flag.
     mov bx, 0x07                ; Clear page and color.

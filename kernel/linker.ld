@@ -5,6 +5,7 @@ SECTIONS
     . = 0x10000;
     .kernel :
     {
+        *(.text.main);
         *(.text)
         *(.text.*)
         *(.rodata)
