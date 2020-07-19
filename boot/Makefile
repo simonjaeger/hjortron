@@ -11,8 +11,8 @@ LD = ${HOME}/opt/htools/bin/i686-elf-ld
 
 all: $(OBJ)
 	mkdir -p $(BIN_FOLDER)
-	$(LD) obj/boot.o -T boot.ld -o bin/boot.bin
-	$(LD) obj/test.o -T test.ld -o bin/test.bin
+	$(LD) obj/boot.o obj/print.o -T boot.ld -o bin/boot.bin
+	$(LD) obj/test.o obj/print.o -T test.ld -o bin/test.bin
 
 $(OBJ_FOLDER)/%.o: $(SRC_FOLDER)/%.s
 	mkdir -p $(@D)

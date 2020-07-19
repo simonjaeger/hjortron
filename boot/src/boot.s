@@ -71,12 +71,15 @@ start:
     call find
 
     mov si, di
+    extern print
     call print
 
     mov ax, [di+0x1A]    ; Get cluster.
 
     mov bx, 0x3000
     call read
+
+    jmp 0x3000
 
     jmp halt
 
@@ -252,25 +255,3 @@ read16:
     popa
     retn
     
-; print
-; Print string using teletype output.
-;
-; Input:
-; si = string
-
-print:
-    pusha
-    cld                         ; Clear direction flag.
-    mov bx, 0x07                ; Clear page and color.
-    mov ah, 0x0E                ; Teletype output.
-
-.loop:
-    lodsb                       ; Load character.
-    or al, al                   ; Check for null terminator.
-    jz .end 
-    int 0x10 
-    jmp .loop                   ; Go to next character.
-
-.end:
-    popa
-    retn

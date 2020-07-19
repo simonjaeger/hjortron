@@ -6,6 +6,7 @@ SECTIONS
     .boot :
     {
         *(.boot)
+        *(.text)
     }
     .signature : AT(0x7DFE)
     {

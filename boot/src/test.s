@@ -1,8 +1,16 @@
 section .text
 bits 16
 
-global text
-text:
+global test
+test:
+
+    extern print
+    mov si, LABEL
+    call print
+
+halt:
+    jmp halt
+    hlt
 
 db "Sector0", 0
 
@@ -13,3 +21,5 @@ db "Sector1", 0
 TIMES 1024 - ($ - $$) db 0
 
 db "Sector2", 0
+
+LABEL            db "Hello from TEST.BIN!", 0
