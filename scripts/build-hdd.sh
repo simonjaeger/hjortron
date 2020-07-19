@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Create loopback device.
-dd if=/dev/zero of=bin/hdd.img bs=1048576 count=128
+dd if=/dev/zero of=bin/hdd.img bs=1048576 count=1
 sudo losetup /dev/loop0 bin/hdd.img
 
 # Format as FAT12.

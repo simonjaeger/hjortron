@@ -61,16 +61,6 @@ start:
     mov bx, FAT1_SEGMENT        ; Destination offset.
     mov si, 1                   ; First sector.
     mov al, 9                   ; Number of sectors.
-    mov dl, byte [boot_drive]   ; Drive.
-    call read16
-
-    ; Read root directory.
-    xor ax, ax
-    mov es, ax                  ; Destination segment.
-    mov bx, ROOT_DIRECTORY_SEGMENT ; Destination offset.
-    mov si, 1+9+9               ; First sector.
-    mov al, 14                  ; Number of sectors.
-    mov dl, byte [boot_drive]   ; Drive.
     call read16
 
     ; Find INIT.BIN.
@@ -94,8 +84,7 @@ start:
     call read_file
 
     ; Jump to INIT.BIN.
-    mov dl, byte [boot_drive]
-    push dx
+    push boot_drive
     jmp INIT_SEGMENT
 
 error:
@@ -118,12 +107,15 @@ data:
     DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14 * 1
     INIT_SEGMENT            equ 0x1000
 
+    BUFFER      equ ROOT_DIRECTORY_SEGMENT
+    BUFFER_MAX  equ ROOT_DIRECTORY_SEGMENT+512
+
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
     FILE_KERNEL_BIN         db "KERNEL  BIN"
     ERROR                   db "Error.", 0
-    ERROR_FILE_NOT_FOUND    db "Could not find file.", 0
-    ERROR_READ_FROM_DRIVE   db "Could not read from drive.", 0
+    ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
+    ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
 
 ; find_file
 ; Find a file in the root directory.
@@ -136,9 +128,35 @@ data:
 
 find_file:
     mov ax, [DIRECTORY_ENTRIES] ; File count.
-    mov di, ROOT_DIRECTORY_SEGMENT
+    mov di, BUFFER_MAX          ; Force a read of first sector.
+    xor bx, bx                  ; Sector offset.
 
 .loop:
+    ; Read sector from root directory if we are
+    ; beyond the buffer.
+    cmp di, BUFFER_MAX
+    jl .compare
+
+    pusha                       ; Store registers.
+
+    ; Compute LBA for root directory sector.
+    mov si, word [RESERVED_SECTORS]
+    add si, word [SECTORS_PER_FAT]
+    add si, word [SECTORS_PER_FAT]
+    add si, bx                  ; Add sector offset.
+
+    xor ax, ax
+    mov es, ax                  ; Destination segment.
+    mov bx, BUFFER              ; Destination offset.
+    mov al, 1                   ; Number of sectors.
+    call read16
+
+    popa                        ; Restore registers.
+
+    mov di, BUFFER              ; Read from beginning.
+    inc bx                      ; Increment sector offset.
+
+.compare:
     ; Store source and destination as they
     ; will be incremented by the comparison.
     push si
@@ -155,6 +173,7 @@ find_file:
     jz .end
 
     add di, 0x20                ; Next entry in directory.
+
     dec ax
     jnz .loop
 
@@ -182,7 +201,6 @@ read_file:
     add si, 1+9+9+14            ; Data segment.
 
     mov al, [SECTORS_PER_CLUSTER] ; Number of sectors.
-    mov dl, byte [boot_drive]   ; Drive.
     call read16
 
     ; Increment destination.
@@ -233,11 +251,8 @@ read_file:
 ; es:bx = destination
 ; si    = lba
 ; al    = number of sectors
-; dl    = drive
 
 read16:
-    pusha
-
     mov ah, 0x02                ; Read sectors.
     push ax                     ; Store number of sectors.
     push dx                     ; Store drive.
@@ -263,6 +278,7 @@ read16:
     mov dl, al
     pop ax                      ; Restore number of sectors.
 
+    mov dl, byte [boot_drive]   ; Drive.
     int 0x13                    ; Read sectors.
     jnc .end
 
@@ -271,6 +287,5 @@ read16:
     jmp error
 
 .end:
-    popa
     retn
     

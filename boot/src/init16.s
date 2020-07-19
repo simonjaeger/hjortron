@@ -4,7 +4,8 @@ bits 16
 global init16
 init16:
     ; Load from boot.
-    pop dx
+    pop di
+    mov dx, [di]
     extern boot_drive
     mov byte [boot_drive], dl
 
