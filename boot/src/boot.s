@@ -11,11 +11,11 @@ boot:
     bytes_per_sector                    dw 0
     sectors_per_cluster                 db 0
     reserved_sectors                    dw 0
-    file_allocation_tables              db 0
+    fats                                db 0
     directory_entries                   dw 0
-    total_sectors                       dw 0
+    sectors                             dw 0
     media_descriptor_type               db 0
-    sectors_per_file_allocation_table   dw 0
+    sectors_per_fat                     dw 0
     sectors_per_track                   dw 0
     heads_per_cylinder                  dw 0
     hidden_sectors                      dd 0
@@ -29,8 +29,9 @@ boot:
     volume_label                        times 11 db 0
     system_identifier                   dq 0
 
-; TODO: Use BPB to compute values.
-FAT1_SEGMENT equ 0x7E00
+; Pre-computing segments to save space for now. This could
+; be done by using the BPB values instead.
+FAT1_SEGMENT equ 0x7C00 + 512 * 1
 FAT2_SEGMENT equ FAT1_SEGMENT + 512 * 9
 ROOT_SEGMENT equ FAT2_SEGMENT + 512 * 9
 DATA_SEGMENT equ ROOT_SEGMENT + 512 * 14
@@ -52,129 +53,165 @@ start:
     mov bx, FAT1_SEGMENT        ; Destination offset.
     mov si, 1                   ; First sector.
     mov al, 9                   ; Number of sectors.
-    ; mov dl, dl                ; Drive "should" be set by BIOS.
+    mov dl, byte [boot_drive]   ; Drive.
     call read16
 
     ; Read root directory.
     xor ax, ax
+    mov es, ax                  ; Destination segment.
     mov bx, ROOT_SEGMENT        ; Destination offset.
-    mov si, 19                  ; First sector.
+    mov si, 1+9+9               ; First sector.
     mov al, 14                  ; Number of sectors.
-    ; mov dl, dl                ; Drive "should" be set by BIOS.
+    mov dl, byte [boot_drive]   ; Drive.
     call read16
 
 
 
+    mov si, FILE_TEST_BIN
+    call find
 
+    mov si, di
+    call print
 
+    mov ax, [di+0x1A]    ; Get cluster.
 
-    mov cx, [directory_entries]
-    mov di, ROOT_SEGMENT
+    mov bx, 0x3000
+    call read
 
-.loop:
-    push cx
+    jmp halt
 
-    mov cx, 11
-    mov si, test_file
-    ; mov di, ax
-
-    repe cmpsb
-    jnz .cont
-
-    ; File found...
-    mov si, file_found
-    call puts
-
-
-    ; add di, 0x1A
-    mov si, [di-11+0x1A]    ; Get cluster.
-    ; dec si
-
-    sub si, 2
-    add si, 1+9+9+14
-
-    ; Read test.
-    xor ax, ax
-    mov bx, 0x9000              ; Destination offset.
-
-    mov al, 1                  ; Number of sectors.
-    ; mov dl, dl                ; Drive "should" be set by BIOS.
-    call read16
-
-
-
-    ; dec ax
-    ; ; mov bx, 12
-    ; ; mul bx
-    ; mov ax, FAT1_SEGMENT
-    ; add ax, 0
-
-    ; mov di, ax
-    ; mov ax, [di]
-    
-    ; ; mov si, [FAT1_SEGMENT + si*12]
-    ; ; mov si, 0x5445
-
-    ; ; cmp ax, 0x0003
-    ; and ax, 0000111111111111b
-    ; cmp ax, 0x0FFF
-    ; jne .cont
-
-    mov si, 0x9000
-    ; mov si, file_found
-    call puts
-
-.cont:
-
-    pop cx
-
-    add di, 0x20
-    dec cx
-    jnz .loop
-
-
-    ; Print.
-    ; mov si, SystemIdentifier
-    ; call puts
-
-
-
+error:
+    call print
 
 halt:
     jmp halt
     hlt
 
+    boot_drive db 0
+    cluster dw 0
 
+
+    cluster_a dw 0
     test_file db "TEST    BIN"
     file_found db "Found file!", 0
+    done db "done!", 0
+
+    FILE_FOUND            db "File found", 0
+    FILE_NOT_FOUND            db "File not found", 0
+
+    FILE_TEST_BIN            db "TEST    BIN"
+    FILE_KERNEL_BIN            db "TEST    BIN"
 
 
-
-; puts
-; Print string using teletype output.
+; find
+; Find a file in the root directory.
 ;
-; si = string
+; Input:
+; si = filename
+;
+; Output:
+; di = entry
 
-puts:
-    pusha
-    cld                         ; Clear direction flag.
-    mov bx, 0x07                ; Clear page and color.
-    mov ah, 0x0E                ; Teletype output.
+find:
+    mov ax, [directory_entries] ; File count.
+    mov di, ROOT_SEGMENT
 
 .loop:
-    lodsb                       ; Load character.
-    or al, al                   ; Check for null terminator.
-    jz .end 
-    int 0x10 
-    jmp .loop                   ; Go to next character.
+    ; Store source and destination as they
+    ; will be incremented by the comparison.
+    push si
+    push di
+
+    ; Compare.
+    mov cx, 11                  ; Filename is 11 bytes.
+    repe cmpsb                  ; Compare filename.
+
+    ; Restore source and destination.
+    pop di
+    pop si
+
+    jz .end
+
+    add di, 0x20                ; Next entry in directory.
+    dec ax
+    jnz .loop
+
+.error:
+    mov si, FILE_NOT_FOUND
+    jmp error
 
 .end:
-    popa
+    ret
+
+; read
+; Read file from disk to memory.
+;
+; Input:
+; es:bx = destination
+; ax    = cluster
+
+read:
+    mov word [cluster], ax      ; Store cluster.
+
+.loop:
+    ; Compute LBA of cluster.
+    mov si, word [cluster]
+    sub si, 2                   ; Reserved.
+    add si, 1+9+9+14            ; Data segment.
+
+    mov al, [sectors_per_cluster] ; Number of sectors.
+    mov dl, byte [boot_drive]   ; Drive.
+    call read16
+
+    ; Temp.
+    mov si, bx
+    call print
+
+    ; Increment destination.
+    mov ax, word [bytes_per_sector]
+    mov cx, word [sectors_per_cluster]
+    mul cx
+    add bx, ax
+
+    ; Compute next cluster.
+    mov ax, word [cluster]
+    mov cx, ax 
+    mov dx, ax
+    shr dx, 1                   ; Multiply by 1.5 bytes.
+    add cx, dx
+
+    ; Read word from FAT.
+    push bx                     ; Store destination.
+    mov bx, FAT1_SEGMENT
+    add bx, cx
+    mov dx, word [bx]
+    pop bx                      ; Restore destination.
+
+    ; Check if cluster is even or odd to find
+    ; where the 12 bits are.
+    test ax, 1
+    jz .low
+
+.high:
+    ; Take low bits bits.
+    shr dx, 4
+    jmp .next 
+.low:
+    ; Take high 12 bits.
+    and dx, 0xFFF
+
+.next:
+    mov word [cluster], dx      ; Store next cluster.
+    cmp dx, 0xFF0               ; Check for EOF.
+    jb .loop
+
+.end:
     retn
 
 ; read16
 ; Read sectors from disk to memory.
 ;
+; Input:
 ; es:bx = destination
 ; si    = lba
 ; al    = number of sectors
@@ -212,5 +249,28 @@ read16:
 
     ; TODO: Check status and handle error.
 
+    popa
+    retn
+    
+; print
+; Print string using teletype output.
+;
+; Input:
+; si = string
+
+print:
+    pusha
+    cld                         ; Clear direction flag.
+    mov bx, 0x07                ; Clear page and color.
+    mov ah, 0x0E                ; Teletype output.
+
+.loop:
+    lodsb                       ; Load character.
+    or al, al                   ; Check for null terminator.
+    jz .end 
+    int 0x10 
+    jmp .loop                   ; Go to next character.
+
+.end:
     popa
     retn
