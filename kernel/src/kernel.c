@@ -1,7 +1,7 @@
+#include "kernel.h"
 #include "types.h"
 #include "string.h"
 
-#include "boot.h"
 #include "memory/malloc.h"
 
 #include "display/display.h"
@@ -60,7 +60,7 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
-extern void main(const boot_info *boot_info)
+void main(const boot_info *boot_info)
 {
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
     enable_cursor();

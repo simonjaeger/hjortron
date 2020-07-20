@@ -3,6 +3,8 @@
 # https://wiki.osdev.org/GCC_Cross-Compiler
 # Run with sudo ./install.sh.
 
+# TODO: Install for user instead...
+
 # Configuration.
 export SOURCE="$HOME/src"
 export DESTINATION="$HOME/opt/htools"

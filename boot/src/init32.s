@@ -1,8 +1,8 @@
-section .boot32
+section .text
 bits 32
 
-global boot32
-boot32:                      
+global init32
+init32:
     ; Set up segment registers.
 	mov ax, 0x10
 	mov ds, ax
@@ -10,13 +10,6 @@ boot32:
 	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-
-    ; Print name.
-    mov esi, name
-    call print32
-
-    ; Get boot drive.
-    mov [boot_drive], dl        ; TODO: Store in boot16.
 
     ; Get CPU vendor.
     mov eax, 0
@@ -36,19 +29,27 @@ boot32:
     mov esp, 0x90000
 
     ; Call kernel.
-    push boot_info
-    extern main
-    call main
+    push data
+    call 0x10000
     cli
+
+    jmp halt
+
+error:
+    extern print32
+    call print32
+
+halt:
+    jmp halt
     hlt
 
-; Boot information structure.
-boot_info:
+data:
     ; GDT.
-    extern gdt_desc
-    gdt: dd gdt_desc
+    extern GDT
+    gdt: dd GDT
 
     ; Drive.
+    global boot_drive
     boot_drive: db 0
 
     ; CPU.
@@ -64,28 +65,6 @@ boot_info:
     mmap_count: dd 0
     global mmap_entries
     mmap_entries: dd 0x8000
-    
-name: db "(Boot32)", 0
 
-; print32
-; Print a string on the screen.
-;
-; esi   =   address of string
-
-print32:
-    pusha
-
-    mov ebx, 0xB8000
-
-.loop:
-    lodsb
-    or al, al
-    jz .end
-    or eax, 0x3F00
-    mov word [ebx], ax
-    add ebx, 2
-    jmp .loop
-
-.end:
-    popa
-    retn
+    ; Strings.
+    ERROR db "Error.", 0
