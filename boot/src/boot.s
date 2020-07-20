@@ -81,6 +81,10 @@ start:
 
 error:
     extern print16
+    push si
+    mov si, ERROR_PREFIX
+    call print16
+    pop si
     call print16
 
 halt:
@@ -88,16 +92,18 @@ halt:
     hlt
 
 data:
-    ; Dynamic data.
+    ; Runtime data.
     boot_drive  db 0
     cluster     dw 0
 
-    ; Constants.
-    FILE_INIT_BIN           db "INIT    BIN", 0
-    FILE_KERNEL_BIN         db "KERNEL  BIN", 0
-    ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
-    ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
+    ; Runtime constants.
+    FILE_INIT_BIN           db "INIT    BIN"
+    FILE_KERNEL_BIN         db "KERNEL  BIN"
+    ERROR_PREFIX            db "Cannot ", 0
+    ERROR_FILE_NOT_FOUND    db "find file.", 0
+    ERROR_READ_FROM_DRIVE   db "read drive.", 0
 
+    ; Compilation constants.
     INIT_SEGMENT    equ 0x1000
     BUFFER          equ 0x7E00
     BUFFER_MAX      equ BUFFER + 0x200
