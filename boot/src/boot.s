@@ -90,24 +90,17 @@ halt:
 data:
     boot_drive  db 0
     cluster     dw 0
-    temp     dw 0 
-    tempend db 0
-
-    ; Pre-compute segments to save space for now. This could
-    ; be done by using the BPB values instead.
-    FAT1_SEGMENT            equ 0x7C00 + 512 * 1
-    FAT2_SEGMENT            equ FAT1_SEGMENT + 512 * 9 * 1
-    ROOT_DIRECTORY_SEGMENT  equ FAT2_SEGMENT + 512 * 9 * 1
-    DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14 * 1
-    INIT_SEGMENT            equ 0x1000
-
-    BUFFER          equ INIT_SEGMENT + 512 * 4
-    BUFFER_MAX      equ BUFFER+512
-    FAT_ENTRY_SIZE  equ 0x20
 
     ; Strings.
-    FILE_INIT_BIN           db "INIT    BIN"
-    FILE_KERNEL_BIN         db "KERNEL  BIN"
+    FILE_INIT_BIN           db "INIT    BIN", 0
+    FILE_KERNEL_BIN         db "KERNEL  BIN", 0
+
+    INIT_SEGMENT    equ 0x1000
+
+    BUFFER          equ 0x7E00
+    BUFFER_MAX      equ BUFFER + 0x200
+    FAT_ENTRY_SIZE  equ 0x20
+
     ; ERROR                   db "Error.", 0
     ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
     ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
@@ -131,7 +124,7 @@ find_file:
     ; Read sector from root directory if we are
     ; beyond the buffer.
     cmp di, BUFFER_MAX
-    jl .compare
+    jb .compare
 
     pusha                       ; Store registers.
 
@@ -150,7 +143,7 @@ find_file:
 
     popa                        ; Restore registers.
 
-    mov di, BUFFER              ; Read from beginning.
+    mov di, BUFFER              ; Read from start of buffer.
     inc bx                      ; Increment sector offset.
 
 .compare:
