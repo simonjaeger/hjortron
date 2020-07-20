@@ -55,19 +55,13 @@ start:
     mov byte [SECTORS_PER_TRACK], cl
 
 .load:
-    ; ; Read FAT1.
-    ; xor ax, ax
-    ; mov es, ax                  ; Destination segment.
-    ; mov bx, FAT1_SEGMENT        ; Destination offset.
-    ; mov si, 1                   ; First sector.
-    ; mov al, 9                   ; Number of sectors.
-    ; call read16
-
     ; Find INIT.BIN.
     mov si, FILE_INIT_BIN
     call find_file
 
     ; Load INIT.BIN.
+    xor bx, bx
+    mov es, bx
     mov bx, INIT_SEGMENT
     call read_file
 
@@ -80,8 +74,6 @@ start:
     mov es, bx
     xor bx, bx
     call read_file
-
-    jmp halt
 
     ; Jump to INIT.BIN.
     push boot_drive
@@ -98,6 +90,8 @@ halt:
 data:
     boot_drive  db 0
     cluster     dw 0
+    temp     dw 0 
+    tempend db 0
 
     ; Pre-compute segments to save space for now. This could
     ; be done by using the BPB values instead.
@@ -114,7 +108,7 @@ data:
     ; Strings.
     FILE_INIT_BIN           db "INIT    BIN"
     FILE_KERNEL_BIN         db "KERNEL  BIN"
-    ERROR                   db "Error.", 0
+    ; ERROR                   db "Error.", 0
     ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
     ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
 
@@ -199,94 +193,82 @@ read_file:
     mov word [cluster], ax      ; Store cluster.
 
 .loop:
-    ; Compute LBA of cluster.
-    mov si, word [cluster]
-    sub si, 2                   ; Reserved sectors.
-    add si, word [RESERVED_SECTORS]
+    ; Load cluster, subtracted by reserved cluster.
+    mov ax, word [cluster]
+    sub ax, 2
 
-    ; Assuming 2 FAT's.
-    add si, word [SECTORS_PER_FAT]
-    add si, word [SECTORS_PER_FAT]
+    ; Multiply cluster and sectors per cluster.
+    xor ch, ch
+    mov cl, byte [SECTORS_PER_CLUSTER]
+    mul cx
 
-    ; Compute root clusters.
+    ; Add offset of reserved sectors and FAT's.
+    add ax, word [RESERVED_SECTORS] 
+    add ax, word [SECTORS_PER_FAT]
+    add ax, word [SECTORS_PER_FAT]
+    mov si, ax
+
+    ; Compute root clusters by multiplying root entries
+    ; with the length of an entry and divided by bytes per sector. 
+    xor dx, dx
     mov ax, word [DIRECTORY_ENTRIES]
     mov cx, FAT_ENTRY_SIZE
     mul cx
     mov cx, word [BYTES_PER_SECTOR]
     div cx
-    xor cx, cx
-    mov cl, byte [SECTORS_PER_CLUSTER]
-    div cx
-    add si, ax                  ; Add root clusters to sector offset.
+    add si, ax
 
-    mov al, byte [SECTORS_PER_CLUSTER] ; Number of sectors.
+    ; Read cluster sectors.
+    mov al, byte [SECTORS_PER_CLUSTER]
     call read16
-
-    ; mov si, ERROR
-    ; call print16
 
     ; Increment destination.
     mov ax, word [BYTES_PER_SECTOR]
+    xor cx, cx
     mov cl, byte [SECTORS_PER_CLUSTER]
     mul cx
     add bx, ax
 
-    ; Compute next cluster.
+    ; Compute next cluster address in FAT by
+    ; multiplying current cluster with 1.5.
     mov ax, word [cluster]
     mov cx, ax 
     mov dx, ax
-    shr dx, 1                   ; Multiply by 1.5 bytes.
+    shr dx, 1
     add cx, dx
 
-    mov si, cluster
-    call print16
-
-
-;    ; Read word from FAT.
-;     push bx                     ; Store destination.
-;     mov bx, FAT1_SEGMENT
-;     add bx, cx
-;     mov dx, word [bx]
-;     pop bx                      ; Restore destination.
-
-
-    ; Read word from FAT.
-    ; push bx                     ; Store destination.
+    ; Store next cluster address and destination.
     push ax
     push bx
     push es
 
+    ; Divide next cluster address to determine
+    ; sector (quotient) and offset (remainder).
+    xor dx, dx
     mov ax, cx
     mov bx, word [BYTES_PER_SECTOR]
     div bx
 
-    push dx
-
-    mov si, 1
+    ; Compute sector within FAT1.
+    mov si, word [RESERVED_SECTORS] ; FAT1
     add si, ax
-    ; mov si, 1 ; TEMP
 
+    ; Load sector into buffer.
     xor ax, ax
     mov es, ax                  ; Destination segment.
     mov bx, BUFFER              ; Destination offset.
     mov al, 1                   ; Number of sectors.
     call read16
 
-    pop dx
-
+    ; Read next cluster from buffer.
     add dx, BUFFER
     mov bx, dx
-    
     mov dx, word [bx]
 
+    ; Restore registers.
     pop es
     pop bx
     pop ax
-    ; pop bx                      ; Restore destination.
-
-
-
-
 
     ; Check if cluster is even or odd to find
     ; the 12 bits.
@@ -302,8 +284,10 @@ read_file:
     and dx, 0xFFF
 
 .next:
-    mov word [cluster], dx      ; Store next cluster.
-    cmp dx, 0xFF0               ; Check for EOF.
+    ; Store next cluster and check if its the
+    ; final cluster for this file.
+    mov word [cluster], dx
+    cmp dx, 0xFF0
     jb .loop
 
 .end:
@@ -318,9 +302,12 @@ read_file:
 ; al    = number of sectors
 
 read16:
-    push ax                     ; Store number of sectors.
+    ; Store registers.
+    pusha
+    push ax
 
-    mov ax, si                  ; Load LBA.
+    ; Load LBA.
+    mov ax, si
 
     ; Convert LBA to CHS.
     ; C = (LBA / Sectors) / Heads
@@ -337,6 +324,7 @@ read16:
     shl ah, 6 
     or cl, ah
 
+    ; Read sector.
     pop ax                      ; Restore number of sectors.
     mov ah, 0x02                ; Read sectors.
     mov dl, byte [boot_drive]   ; Drive.
@@ -344,9 +332,11 @@ read16:
     jnc .end
 
 .error:
+    popa
     mov si, ERROR_READ_FROM_DRIVE
     jmp error
 
 .end:
+    popa
     retn
     
