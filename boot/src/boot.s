@@ -88,22 +88,20 @@ halt:
     hlt
 
 data:
+    ; Dynamic data.
     boot_drive  db 0
     cluster     dw 0
 
-    ; Strings.
+    ; Constants.
     FILE_INIT_BIN           db "INIT    BIN", 0
     FILE_KERNEL_BIN         db "KERNEL  BIN", 0
+    ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
+    ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
 
     INIT_SEGMENT    equ 0x1000
-
     BUFFER          equ 0x7E00
     BUFFER_MAX      equ BUFFER + 0x200
     FAT_ENTRY_SIZE  equ 0x20
-
-    ; ERROR                   db "Error.", 0
-    ERROR_FILE_NOT_FOUND    db "Cannot find file.", 0
-    ERROR_READ_FROM_DRIVE   db "Cannot read drive.", 0
 
 ; find_file
 ; Find a file in the root directory.
