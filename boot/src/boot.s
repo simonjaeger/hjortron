@@ -55,13 +55,13 @@ start:
     mov byte [SECTORS_PER_TRACK], cl
 
 .load:
-    ; Read FAT1.
-    xor ax, ax
-    mov es, ax                  ; Destination segment.
-    mov bx, FAT1_SEGMENT        ; Destination offset.
-    mov si, 1                   ; First sector.
-    mov al, 9                   ; Number of sectors.
-    call read16
+    ; ; Read FAT1.
+    ; xor ax, ax
+    ; mov es, ax                  ; Destination segment.
+    ; mov bx, FAT1_SEGMENT        ; Destination offset.
+    ; mov si, 1                   ; First sector.
+    ; mov al, 9                   ; Number of sectors.
+    ; call read16
 
     ; Find INIT.BIN.
     mov si, FILE_INIT_BIN
@@ -81,7 +81,7 @@ start:
     xor bx, bx
     call read_file
 
-    ; jmp halt
+    jmp halt
 
     ; Jump to INIT.BIN.
     push boot_drive
@@ -107,8 +107,8 @@ data:
     DATA_SEGMENT            equ ROOT_DIRECTORY_SEGMENT + 512 * 14 * 1
     INIT_SEGMENT            equ 0x1000
 
-    BUFFER          equ ROOT_DIRECTORY_SEGMENT
-    BUFFER_MAX      equ ROOT_DIRECTORY_SEGMENT+512
+    BUFFER          equ INIT_SEGMENT + 512 * 4
+    BUFFER_MAX      equ BUFFER+512
     FAT_ENTRY_SIZE  equ 0x20
 
     ; Strings.
@@ -142,6 +142,7 @@ find_file:
     pusha                       ; Store registers.
 
     ; Compute LBA for root directory sector.
+    ; Assuming 2 FAT's.
     mov si, word [RESERVED_SECTORS]
     add si, word [SECTORS_PER_FAT]
     add si, word [SECTORS_PER_FAT]
@@ -202,6 +203,8 @@ read_file:
     mov si, word [cluster]
     sub si, 2                   ; Reserved sectors.
     add si, word [RESERVED_SECTORS]
+
+    ; Assuming 2 FAT's.
     add si, word [SECTORS_PER_FAT]
     add si, word [SECTORS_PER_FAT]
 
@@ -216,7 +219,7 @@ read_file:
     div cx
     add si, ax                  ; Add root clusters to sector offset.
 
-    mov al, [SECTORS_PER_CLUSTER] ; Number of sectors.
+    mov al, byte [SECTORS_PER_CLUSTER] ; Number of sectors.
     call read16
 
     ; mov si, ERROR
@@ -224,7 +227,7 @@ read_file:
 
     ; Increment destination.
     mov ax, word [BYTES_PER_SECTOR]
-    mov cx, word [SECTORS_PER_CLUSTER]
+    mov cl, byte [SECTORS_PER_CLUSTER]
     mul cx
     add bx, ax
 
@@ -235,53 +238,53 @@ read_file:
     shr dx, 1                   ; Multiply by 1.5 bytes.
     add cx, dx
 
+    mov si, cluster
+    call print16
 
 
-
-    ; ; Read word from FAT.
-    ; ; push bx                     ; Store destination.
-    ; push ax
-    ; push bx
-    ; push es
-
-    ; ; mov bx, FAT1_SEGMENT
-    ; ; add bx, cx
-    ; ; mov dx, word [bx]
-
-    ; mov ax, cx
-    ; mov bx, word [BYTES_PER_SECTOR]
-    ; div bx
-
-    ; push dx
-
-    ; mov si, 1
-    ; add si, ax
-    ; ; mov si, 1 ; TEMP
-
-    ; xor ax, ax
-    ; mov es, ax                  ; Destination segment.
-    ; mov bx, BUFFER              ; Destination offset.
-    ; mov al, 1                   ; Number of sectors.
-    ; call read16
-
-    ; pop dx
-
-    ; add dx, BUFFER
-    ; mov bx, dx
-    ; mov dx, word [bx]
-
-    ; pop es
-    ; pop bx
-    ; pop ax
-    ; ; pop bx                      ; Restore destination.
+;    ; Read word from FAT.
+;     push bx                     ; Store destination.
+;     mov bx, FAT1_SEGMENT
+;     add bx, cx
+;     mov dx, word [bx]
+;     pop bx                      ; Restore destination.
 
 
-   ; Read word from FAT.
-    push bx                     ; Store destination.
-    mov bx, FAT1_SEGMENT
-    add bx, cx
+    ; Read word from FAT.
+    ; push bx                     ; Store destination.
+    push ax
+    push bx
+    push es
+
+    mov ax, cx
+    mov bx, word [BYTES_PER_SECTOR]
+    div bx
+
+    push dx
+
+    mov si, 1
+    add si, ax
+    ; mov si, 1 ; TEMP
+
+    xor ax, ax
+    mov es, ax                  ; Destination segment.
+    mov bx, BUFFER              ; Destination offset.
+    mov al, 1                   ; Number of sectors.
+    call read16
+
+    pop dx
+
+    add dx, BUFFER
+    mov bx, dx
+    
     mov dx, word [bx]
-    pop bx                      ; Restore destination.
+
+    pop es
+    pop bx
+    pop ax
+    ; pop bx                      ; Restore destination.
+
+
 
 
 
@@ -315,9 +318,7 @@ read_file:
 ; al    = number of sectors
 
 read16:
-    mov ah, 0x02                ; Read sectors.
     push ax                     ; Store number of sectors.
-    push dx                     ; Store drive.
 
     mov ax, si                  ; Load LBA.
 
@@ -336,10 +337,8 @@ read16:
     shl ah, 6 
     or cl, ah
 
-    pop ax                      ; Restore drive.
-    mov dl, al
     pop ax                      ; Restore number of sectors.
-
+    mov ah, 0x02                ; Read sectors.
     mov dl, byte [boot_drive]   ; Drive.
     int 0x13                    ; Read sectors.
     jnc .end
