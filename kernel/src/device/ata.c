@@ -4,8 +4,8 @@
 #include "debug.h"
 #include "memory/malloc.h"
 
-#define ATA_BUS_PRIMARY 0x1F0
-#define ATA_BUS_SECONDARY 0x170
+// #define ATA_BUS_PRIMARY 0x1F0
+// #define ATA_BUS_SECONDARY 0x170
 
 #define ATA_DISK_PRIMARY 0xA0
 #define ATA_DISK_SECONDARY 0xB0
@@ -111,12 +111,8 @@ void ata_identify(uint16_t bus, size_t disk)
           model_number);
 }
 
-void ata_read_test()
+void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_count)
 {
-    uint16_t bus = ATA_BUS_PRIMARY;
-    uint32_t lba = 0;
-    uint32_t sector_count = 2;
-
     outb(bus + ATA_OFFSET_DRIVE, 0xE0 | (uint8_t)((lba >> 24) & 0x0F));
 
     outb(bus + ATA_OFFSET_FEATURES, 0);
@@ -127,34 +123,25 @@ void ata_read_test()
 
     outb(bus + ATA_OFFSET_COMMAND, ATA_COMMAND_READ);
 
-    while (sector_count > 0)
+    for (size_t i = 0; i < sector_count; i++)
     {
-        debug("sector %d", (2 - sector_count));
+        debug("read sector %d", lba + i);
 
         ata_wait(bus);
         ata_poll(bus);
 
-        for (size_t i = 0; i < 256; i++)
+        for (size_t j = 0; j < 256; j++)
         {
-            uint16_t data = inw(bus);
-            if (data)
-            {
-            }
-            // debug("%x", data);
+            // TODO: Read bytes per sector from disk parameters.
+            buffer[i * 512] = inw(bus);
         }
-
-        sector_count--;
     }
-
-    debug("%s", "ok");
 }
 
 void ata_init()
 {
     ata_identify(ATA_BUS_PRIMARY, ATA_DISK_PRIMARY);
     ata_identify(ATA_BUS_PRIMARY, ATA_DISK_SECONDARY);
-
-    // ata_read_test();
 }
 
 void ata_string_swap(string buffer, uint8_t *data, size_t length)

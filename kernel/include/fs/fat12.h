@@ -3,8 +3,9 @@
 
 #include "types.h"
 
-typedef struct bios_parameter_block
+typedef struct fat12_extended_bios_parameter_block
 {
+    char jmp[3];
     char oem_identifier[8];
     uint16_t bytes_per_sector;
     uint8_t sectors_per_cluster;
@@ -26,6 +27,6 @@ typedef struct bios_parameter_block
     uint32_t volume_identifier;
     char volume_label[11];
     char system_identifier[8];
-} __attribute__((packed)) bios_parameter_block;
+} __attribute__((packed)) fat12_extended_bios_parameter_block;
 
 #endif // FS_FAT12_H_

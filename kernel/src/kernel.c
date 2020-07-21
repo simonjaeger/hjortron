@@ -15,7 +15,7 @@
 #include "device/ata.h"
 #include "debug.h"
 
-#include "fs/fat12.h"
+#include "fs/fs.h"
 
 void disk_info(const boot_info *boot_info)
 {
@@ -62,7 +62,6 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
-
 void main(const boot_info *boot_info)
 {
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
@@ -73,7 +72,7 @@ void main(const boot_info *boot_info)
     mmap_info(&boot_info->memory_map);
 
     // TODO: Find appropriate memory map entry for dynamic memory.
-    malloc_init(0x20000, 64 * 1024);
+    malloc_init(0x30000, 64 * 1024);
 
     irq_init();
     pic_init();
@@ -86,8 +85,7 @@ void main(const boot_info *boot_info)
     serial_init(SERIAL_COM1);
     ata_init();
 
-    bios_parameter_block *bpb = ((bios_parameter_block*)(uint32_t)boot_info->bpb); 
-    debug("%s", bpb->oem_identifier);
+    fs_init(boot_info);
 
     while (1)
         ;

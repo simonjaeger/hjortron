@@ -2,7 +2,7 @@
 #include "display/display.h"
 #include "device/serial.h"
 
-// Use display as debug output.
+// // Use display as debug output.
 // #define dputc putc
 // #define dputs puts
 
