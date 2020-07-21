@@ -76,6 +76,7 @@ start:
     call read_file
 
     ; Jump to INIT.BIN.
+    push OEM_IDENTIFIER
     push boot_drive
     jmp INIT_SEGMENT
 

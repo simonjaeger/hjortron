@@ -9,6 +9,11 @@ init16:
     extern boot_drive
     mov byte [boot_drive], dl
 
+    pop dx
+    extern bpb
+    mov word [bpb], dx
+
+
     ; Enable A20 address line.
     int 0x15    
     

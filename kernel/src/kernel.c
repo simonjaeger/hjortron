@@ -15,6 +15,8 @@
 #include "device/ata.h"
 #include "debug.h"
 
+#include "fs/fat12.h"
+
 void disk_info(const boot_info *boot_info)
 {
     string type;
@@ -60,6 +62,7 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
+
 void main(const boot_info *boot_info)
 {
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
@@ -82,6 +85,9 @@ void main(const boot_info *boot_info)
 
     serial_init(SERIAL_COM1);
     ata_init();
+
+    bios_parameter_block *bpb = ((bios_parameter_block*)(uint32_t)boot_info->bpb); 
+    debug("%s", bpb->oem_identifier);
 
     while (1)
         ;

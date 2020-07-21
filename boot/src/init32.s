@@ -49,6 +49,8 @@ data:
     gdt: dd GDT
 
     ; Drive.
+    global bpb
+    bpb: dw 0
     global boot_drive
     boot_drive: db 0
 
