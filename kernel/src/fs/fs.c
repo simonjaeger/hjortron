@@ -22,13 +22,4 @@ void fs_init(const boot_info *boot_info)
     printf("Sectors per track: %d\n", bios_parameter_block->sectors_per_track);
     printf("Bytes per sector: %d\n", bios_parameter_block->bytes_per_sector);
     printf("Reserved sectors: %d\n", bios_parameter_block->reserved_sectors);
-
-    // fs_ls_test();
 }
-
-// void fs_ls_test()
-// {
-//     // // TODO: Read bytes per sector from disk parameters.
-//     uint16_t *buffer = (uint16_t *)malloc(256 * sizeof(uint16_t));
-//     free(buffer);
-// }
