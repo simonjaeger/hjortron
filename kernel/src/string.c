@@ -26,14 +26,13 @@ string reverse(string str, size_t i, size_t j)
     return str;
 }
 
-void strcpy(string src, string dest, size_t *offset)
+string strncpy(string src, string dest, size_t count)
 {
-    size_t len = strlen(src);
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i < count; i++)
     {
-        dest[*offset] = src[i];
-        *offset = *offset + 1;
+        dest[i] = src[i];
     }
+    return dest;
 }
 
 void strtrim(string str, char c)
@@ -140,7 +139,9 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
         case 's':
         {
             string arg = __builtin_va_arg(ap, string);
-            strcpy(arg, str, &j);
+            size_t arg_len = strlen(arg);
+            strncpy(arg, &str[j], arg_len);
+            j += arg_len;
         }
         break;
         case 'd':
@@ -148,7 +149,10 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             uint32_t arg = __builtin_va_arg(ap, uint32_t);
             char buffer[32];
             itoa(arg, buffer, 10);
-            strcpy(buffer, str, &j);
+
+            size_t arg_len = strlen(&buffer[0]);
+            strncpy(buffer, &str[j], arg_len);
+            j += arg_len;
         }
         break;
         case 'x':
@@ -156,8 +160,11 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             uint32_t arg = __builtin_va_arg(ap, uint32_t);
             char buffer[32];
             itoa(arg, buffer, 16);
-            strcpy("0x", str, &j);
-            strcpy(buffer, str, &j);
+
+            size_t arg_len = strlen(&buffer[0]);
+            strncpy("0x", &str[j], 2);
+            strncpy(buffer, &str[j + 2], arg_len);
+            j += arg_len + 2;
         }
         break;
         case 'l':
@@ -176,7 +183,10 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
                 uint64_t arg = __builtin_va_arg(ap, uint64_t);
                 char buffer[32];
                 itoa(arg, buffer, 10);
-                strcpy(buffer, str, &j);
+
+                size_t arg_len = strlen(&buffer[0]);
+                strncpy(buffer, &str[j], arg_len);
+                j += arg_len;
             }
             break;
             case 'x':
@@ -184,8 +194,11 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
                 uint64_t arg = __builtin_va_arg(ap, uint64_t);
                 char buffer[32];
                 itoa(arg, buffer, 16);
-                strcpy("0x", str, &j);
-                strcpy(buffer, str, &j);
+
+                size_t arg_len = strlen(&buffer[0]);
+                strncpy("0x", &str[j], 2);
+                strncpy(buffer, &str[j + 2], arg_len);
+                j += arg_len + 2;
             }
             break;
             default:
