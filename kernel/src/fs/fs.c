@@ -86,6 +86,29 @@ fat12_directory_entry *fs_find(fat12_directory_entry *entries, size_t count, con
     return NULL;
 }
 
+uint16_t fs_next_cluster(size_t cluster)
+{
+    // Compute offsets.
+    size_t byte_offset = cluster + cluster / 2;
+    size_t lba_offset = byte_offset / bios_parameter_block->bytes_per_sector;
+    size_t sector_offset = byte_offset % bios_parameter_block->bytes_per_sector;
+
+    // Read FAT.
+    uint8_t *buffer = (uint8_t *)malloc(bios_parameter_block->bytes_per_sector);
+    ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_fat1 + lba_offset, 1);
+
+    // Get next cluster and deallocate buffer.
+    uint16_t next_cluster = *((uint16_t *)&buffer[sector_offset]);
+    free(buffer);
+
+    // Remove 4 bits from the value that belong to another cluster.
+    if (cluster & 1)
+    {
+        return next_cluster >> 4;
+    }
+    return next_cluster = 0xFFF;
+}
+
 void fs_list2(const fat12_directory_entry *entry)
 {
     // Compute cluster offset (LBA).
@@ -101,6 +124,8 @@ void fs_list2(const fat12_directory_entry *entry)
     fs_print((fat12_directory_entry *)buffer, bios_parameter_block->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE);
 
     // TODO: Check next cluster...
+    uint16_t cluster = fs_next_cluster((entry->cluster_high << 16) | entry->cluster_low);
+    debug("cluster: %x", cluster);
 
     free(buffer);
 }
