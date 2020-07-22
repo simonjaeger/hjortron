@@ -117,7 +117,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
     for (size_t i = 0; i < len; i++)
     {
         // Copy standard characters.
-        while (format[i] != '%')
+        while (format[i] != '%' && i < len)
         {
             str[j++] = format[i++];
         }
