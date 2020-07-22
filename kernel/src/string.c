@@ -10,20 +10,16 @@ size_t strlen(const string str)
     return i;
 }
 
-void swap(char *a, char *b)
+size_t strcmp(const string str1, const string str2)
 {
-    char t = *a;
-    *a = *b;
-    *b = t;
-}
-
-string reverse(string str, size_t i, size_t j)
-{
-    while (i < j)
+    string s1 = (string)str1;
+    string s2 = (string)str2;
+    while (*s1 && (*s1 == *s2))
     {
-        swap(&str[i++], &str[j--]);
+        s1++;
+        s2++;
     }
-    return str;
+    return *(const unsigned char *)s1 - *(const unsigned char *)s2;
 }
 
 void strcpy(string src, string dest, size_t len)
@@ -56,6 +52,22 @@ void strset(string str, char c, size_t len)
     {
         str[i] = c;
     }
+}
+
+void swap(char *a, char *b)
+{
+    char t = *a;
+    *a = *b;
+    *b = t;
+}
+
+string reverse(string str, size_t i, size_t j)
+{
+    while (i < j)
+    {
+        swap(&str[i++], &str[j--]);
+    }
+    return str;
 }
 
 string itoa(int32_t i, string str, size_t base)

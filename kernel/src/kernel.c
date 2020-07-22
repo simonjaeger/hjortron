@@ -86,6 +86,7 @@ void main(const boot_info *boot_info)
     ata_init();
 
     fs_init(boot_info);
+    fs_list("/");
 
     while (1)
         ;

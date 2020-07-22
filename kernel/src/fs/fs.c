@@ -6,6 +6,9 @@
 #include "debug.h"
 
 static fat12_extended_bios_parameter_block *bios_parameter_block = NULL;
+static size_t lba_fat1;
+static size_t lba_root;
+static size_t lba_data;
 
 void fs_init(const boot_info *boot_info)
 {
@@ -36,35 +39,95 @@ void fs_init(const boot_info *boot_info)
     printf("Bytes per sector: %d\n", bios_parameter_block->bytes_per_sector);
     printf("Reserved sectors: %d\n", bios_parameter_block->reserved_sectors);
 
-    fs_ls_test();
+    lba_fat1 = bios_parameter_block->reserved_sectors;
+    lba_root = lba_fat1 + bios_parameter_block->sectors_per_fat * bios_parameter_block->fats;
+    lba_data = lba_root + bios_parameter_block->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bios_parameter_block->bytes_per_sector;
+
+    debug("initialized, fat1=%lx, root=%lx, data=%lx", ((uint64_t)lba_fat1), ((uint64_t)lba_root), ((uint64_t)lba_data));
 }
 
-void fs_ls_test()
+void fs_print(fat12_directory_entry *entries, size_t count)
 {
-    uint16_t *buffer = (uint16_t *)malloc(256 * sizeof(uint16_t));
-
-    size_t lba = 0;
-    lba += bios_parameter_block->reserved_sectors;
-    for (size_t i = 0; i < bios_parameter_block->fats; i++)
-    {
-        lba += bios_parameter_block->sectors_per_fat;
-    }
-
-    ata_read(buffer, ATA_BUS_PRIMARY, lba, 1);
-
-    printf("\ntest ls /\n%s    %s   %s\n", "Filename", "Type", "Size");
-    fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
-    for (size_t i = 0; i < bios_parameter_block->directory_entries; i++)
+    for (size_t i = 0; i < count; i++)
     {
         fat12_directory_entry entry = entries[i];
         if (entry.attributes == 0x10 || entry.attributes == 0x20)
         {
-            char filename[12];
-            strset(filename, '\0', 12);
-            strcpy(entry.filename, filename, 11);
+            char filename[FAT12_FILENAME_LENGTH + 1];
+            strset(filename, '\0', FAT12_FILENAME_LENGTH + 1);
+            strcpy(entry.filename, filename, FAT12_FILENAME_LENGTH);
             string type = entry.attributes == 0x10 ? "FOLDER" : "FILE  ";
             printf("%s %s %d\n", filename, type, entry.size);
         }
+    }
+}
+
+bool fs_match(string filename1, string filename2)
+{
+    for (size_t i = 0; i < FAT12_FILENAME_LENGTH; i++)
+    {
+        if (!filename1[i] || filename1[i] != filename2[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+fat12_directory_entry *fs_find(fat12_directory_entry *entries, size_t count, const string filename, uint8_t attributes)
+{
+    for (size_t i = 0; i < count; i++)
+    {
+        if (entries[i].attributes == attributes && fs_match(entries[i].filename, filename))
+        {
+            return &entries[i];
+        }
+    }
+    return NULL;
+}
+
+void fs_list2(const fat12_directory_entry *entry)
+{
+    // Compute cluster offset (LBA).
+    uint32_t lba_offset = (entry->cluster_high << 16) | entry->cluster_low;
+    lba_offset -= 2;
+    lba_offset *= bios_parameter_block->sectors_per_cluster;
+
+    uint32_t *buffer = (uint32_t *)malloc(bios_parameter_block->bytes_per_sector);
+
+    ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_data + lba_offset, 1);
+
+    // fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
+    fs_print((fat12_directory_entry *)buffer, bios_parameter_block->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE);
+
+    // TODO: Check next cluster...
+
+    free(buffer);
+}
+
+void fs_list(const string path)
+{
+    printf("\n%s\n", path);
+
+    // Compute sectors and create buffer for root directory.
+    size_t directory_size = bios_parameter_block->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bios_parameter_block->bytes_per_sector;
+    uint32_t *buffer = (uint32_t *)malloc(directory_size * bios_parameter_block->bytes_per_sector);
+
+    // Read entire root directory.
+    ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_root, directory_size);
+
+    fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
+    // fs_print(entries, bios_parameter_block->directory_entries);
+
+    fat12_directory_entry *entry = fs_find(entries, bios_parameter_block->directory_entries, "DATA1      ", FAT12_ATTRIBUTE_DIRECTORY);
+    if (entry)
+    {
+        // printf("%s %d %d", entry->filename, entry->cluster_low, entry->size);
+        fs_list2(entry);
+    }
+    else
+    {
+        printf("%s", "not found");
     }
 
     free(buffer);

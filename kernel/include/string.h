@@ -6,7 +6,7 @@
 typedef char *string;
 
 size_t strlen(const string str);
-// u32 strcmp(const string str1, const string str2);
+size_t strcmp(const string str1, const string str2);
 void strcpy(string src, string dest, size_t len);
 void strtrim(string str, char c);
 void strset(string str, char c, size_t len);
