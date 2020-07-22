@@ -40,11 +40,6 @@ void fs_ls_test()
 
     ata_read(buffer, ATA_BUS_PRIMARY, lba, 1);
 
-    for (size_t i = 0; i < 256; i++)
-    {
-        debug("%x", buffer[i]);
-    }
-
     printf("\ntest ls /\n%s     %s   %s\n", "Filename", "Type", "Size");
     fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
     for (size_t i = 0; i < bios_parameter_block->directory_entries; i++)

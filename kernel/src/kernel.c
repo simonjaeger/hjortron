@@ -87,10 +87,6 @@ void main(const boot_info *boot_info)
 
     fs_init(boot_info);
 
-    // TODO: Remove... bug test.
-    uint16_t *buffer = (uint16_t *)malloc(256 * sizeof(uint16_t));
-    free(buffer);
-
     while (1)
         ;
 }
