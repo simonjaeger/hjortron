@@ -11,11 +11,23 @@ void fs_init(const boot_info *boot_info)
 {
     bios_parameter_block = (fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb;
 
+    char oem_identifier[9];
+    strset(oem_identifier, '\0', 9);
+    strcpy(bios_parameter_block->oem_identifier, oem_identifier, 8);
+
+    char volume_label[12];
+    strset(volume_label, '\0', 12);
+    strcpy(bios_parameter_block->volume_label, volume_label, 11);
+
+    char system_identifier[9];
+    strset(system_identifier, '\0', 9);
+    strcpy(bios_parameter_block->system_identifier, system_identifier, 8);
+
     printf("FAT12 Information:\n");
-    printf("OEM Identifier: %s\n", bios_parameter_block->oem_identifier);
-    printf("System Identifier: %s\n", bios_parameter_block->system_identifier);
-    printf("Volume Identifier: %s\n", bios_parameter_block->volume_identifier);
-    printf("Volume Label: %s\n", bios_parameter_block->volume_label);
+    printf("OEM Identifier: %s\n", oem_identifier);
+    printf("System Identifier: %s\n", system_identifier);
+    printf("Volume Identifier: %d\n", bios_parameter_block->volume_identifier);
+    printf("Volume Label: %s\n", volume_label);
     printf("Total sectors: %d\n", bios_parameter_block->sectors);
     printf("Root entries: %d\n", bios_parameter_block->directory_entries);
     printf("Sectors per FAT: %d\n", bios_parameter_block->sectors_per_fat);
@@ -40,15 +52,18 @@ void fs_ls_test()
 
     ata_read(buffer, ATA_BUS_PRIMARY, lba, 1);
 
-    printf("\ntest ls /\n%s     %s   %s\n", "Filename", "Type", "Size");
+    printf("\ntest ls /\n%s    %s   %s\n", "Filename", "Type", "Size");
     fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
     for (size_t i = 0; i < bios_parameter_block->directory_entries; i++)
     {
         fat12_directory_entry entry = entries[i];
         if (entry.attributes == 0x10 || entry.attributes == 0x20)
         {
+            char filename[12];
+            strset(filename, '\0', 12);
+            strcpy(entry.filename, filename, 11);
             string type = entry.attributes == 0x10 ? "FOLDER" : "FILE  ";
-            printf("%s %s %d\n", entry.filename, type, entry.size);
+            printf("%s %s %d\n", filename, type, entry.size);
         }
     }
 

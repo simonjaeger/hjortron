@@ -26,7 +26,7 @@ string reverse(string str, size_t i, size_t j)
     return str;
 }
 
-void strncpy(string src, string dest, size_t len)
+void strcpy(string src, string dest, size_t len)
 {
     for (size_t i = 0; i < len; i++)
     {
@@ -147,7 +147,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
         {
             string arg = __builtin_va_arg(ap, string);
             size_t arg_len = strlen(arg);
-            strncpy(arg, &str[j], arg_len);
+            strcpy(arg, &str[j], arg_len);
             j += arg_len;
         }
         break;
@@ -159,7 +159,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             itoa(arg, buffer, 10);
 
             size_t arg_len = strlen(&buffer[0]);
-            strncpy(buffer, &str[j], arg_len);
+            strcpy(buffer, &str[j], arg_len);
             j += arg_len;
         }
         break;
@@ -171,8 +171,8 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             itoa(arg, buffer, 16);
 
             size_t arg_len = strlen(&buffer[0]);
-            strncpy("0x", &str[j], 2);
-            strncpy(buffer, &str[j + 2], arg_len);
+            strcpy("0x", &str[j], 2);
+            strcpy(buffer, &str[j + 2], arg_len);
             j += arg_len + 2;
         }
         break;
@@ -195,7 +195,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
                 itoa(arg, buffer, 10);
 
                 size_t arg_len = strlen(&buffer[0]);
-                strncpy(buffer, &str[j], arg_len);
+                strcpy(buffer, &str[j], arg_len);
                 j += arg_len;
             }
             break;
@@ -207,8 +207,8 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
                 itoa(arg, buffer, 16);
 
                 size_t arg_len = strlen(&buffer[0]);
-                strncpy("0x", &str[j], 2);
-                strncpy(buffer, &str[j + 2], arg_len);
+                strcpy("0x", &str[j], 2);
+                strcpy(buffer, &str[j + 2], arg_len);
                 j += arg_len + 2;
             }
             break;
