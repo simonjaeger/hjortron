@@ -26,13 +26,12 @@ string reverse(string str, size_t i, size_t j)
     return str;
 }
 
-string strncpy(string src, string dest, size_t count)
+void strncpy(string src, string dest, size_t len)
 {
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < len; i++)
     {
         dest[i] = src[i];
     }
-    return dest;
 }
 
 void strtrim(string str, char c)
@@ -49,6 +48,14 @@ void strtrim(string str, char c)
     }
 
     // TODO: Trim start.
+}
+
+void strset(string str, char c, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        str[i] = c;
+    }
 }
 
 string itoa(int32_t i, string str, size_t base)
@@ -148,6 +155,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
         {
             uint32_t arg = __builtin_va_arg(ap, uint32_t);
             char buffer[32];
+            strset(buffer, '\0', 32);
             itoa(arg, buffer, 10);
 
             size_t arg_len = strlen(&buffer[0]);
@@ -159,6 +167,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
         {
             uint32_t arg = __builtin_va_arg(ap, uint32_t);
             char buffer[32];
+            strset(buffer, '\0', 32);
             itoa(arg, buffer, 16);
 
             size_t arg_len = strlen(&buffer[0]);
@@ -182,6 +191,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             {
                 uint64_t arg = __builtin_va_arg(ap, uint64_t);
                 char buffer[32];
+                strset(buffer, '\0', 32);
                 itoa(arg, buffer, 10);
 
                 size_t arg_len = strlen(&buffer[0]);
@@ -193,6 +203,7 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
             {
                 uint64_t arg = __builtin_va_arg(ap, uint64_t);
                 char buffer[32];
+                strset(buffer, '\0', 32);
                 itoa(arg, buffer, 16);
 
                 size_t arg_len = strlen(&buffer[0]);

@@ -7,10 +7,12 @@ typedef char *string;
 
 size_t strlen(const string str);
 // u32 strcmp(const string str1, const string str2);
-string strncpy(string src, string dest, size_t count);
+void strncpy(string src, string dest, size_t len);
 void strtrim(string str, char c);
+void strset(string str, char c, size_t len);
 
 string reverse(string str, size_t i, size_t j);
+
 
 // void atoi(string str, int *i);
 string itoa(int32_t i, string str, size_t base);

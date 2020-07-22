@@ -12,7 +12,8 @@
 
 void debug_printf(string file, __attribute__((unused)) const char *function, size_t line, string format, ...)
 {
-    char buffer[256] = {0};
+    char buffer[256];
+    strset(buffer, '\0', 256);
 
     // Print prefix.
     sprintf(buffer, "(%s:%d): ", file, line);
