@@ -133,7 +133,7 @@ void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_coun
         for (size_t j = 0; j < 256; j++)
         {
             // TODO: Read bytes per sector from disk parameters.
-            buffer[i * 512] = inw(bus);
+            buffer[i * 256 + j] = inw(bus);
         }
     }
 }

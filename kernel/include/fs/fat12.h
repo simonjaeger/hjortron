@@ -29,4 +29,19 @@ typedef struct fat12_extended_bios_parameter_block
     char system_identifier[8];
 } __attribute__((packed)) fat12_extended_bios_parameter_block;
 
+typedef struct fat12_directory_entry {
+    char filename[11];
+    uint8_t attributes;
+    uint8_t reserved;
+    uint8_t created_time_s;
+    uint16_t created_time;
+    uint16_t created_date;
+    uint16_t accessed;
+    uint16_t cluster_high;
+    uint16_t modified_time;
+    uint16_t modified_date;
+    uint16_t cluster_low;
+    uint32_t size;
+} fat12_directory_entry;
+
 #endif // FS_FAT12_H_
