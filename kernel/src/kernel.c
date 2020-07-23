@@ -16,6 +16,7 @@
 #include "debug.h"
 
 #include "fs/fs.h"
+#include "fs/fat12.h"
 
 void disk_info(const boot_info *boot_info)
 {
@@ -85,8 +86,21 @@ void main(const boot_info *boot_info)
     serial_init(SERIAL_COM1);
     ata_init();
 
-    fs_init(boot_info);
-    fs_list("/");
+    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb, "C");
+    // __attribute__((unused)) fs_file *file = fat12_driver->open("KERNEL  BIN");
+    __attribute__((unused)) fs_file *file = fat12_driver->open("DATA1      /DATA2      /LOREM   TXT");
+
+    if (file == NULL)
+    {
+        printf("%s", "Cannot open file.\n");
+    }
+    else
+    {
+        printf("Opened file: \"%s\", %d bytes, %d inode \n", file->name, file->length, file->inode);
+    }
+
+    // fs_init(boot_info);
+    // fs_list("/");
 
     while (1)
         ;
