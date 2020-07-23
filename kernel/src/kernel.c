@@ -72,7 +72,7 @@ void main(const boot_info *boot_info)
     mmap_info(&boot_info->memory_map);
 
     // TODO: Find appropriate memory map entry for dynamic memory.
-    malloc_init(0x30000, 64 * 1024);
+    malloc_init(0x30000, 1024 * 1024);
 
     irq_init();
     pic_init();

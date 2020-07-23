@@ -86,7 +86,7 @@ fat12_directory_entry *fs_find(fat12_directory_entry *entries, size_t count, con
     return NULL;
 }
 
-uint16_t fs_next_cluster(size_t cluster)
+uint16_t fs_next_cluster(uint16_t cluster)
 {
     // Compute offsets.
     size_t byte_offset = cluster + cluster / 2;
@@ -97,6 +97,8 @@ uint16_t fs_next_cluster(size_t cluster)
     uint8_t *buffer = (uint8_t *)malloc(bios_parameter_block->bytes_per_sector);
     ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_fat1 + lba_offset, 1);
 
+    // TODO: Cache buffer.
+
     // Get next cluster and deallocate buffer.
     uint16_t next_cluster = *((uint16_t *)&buffer[sector_offset]);
     free(buffer);
@@ -106,28 +108,51 @@ uint16_t fs_next_cluster(size_t cluster)
     {
         return next_cluster >> 4;
     }
-    return next_cluster = 0xFFF;
+    return next_cluster & 0xFFF;
 }
 
-void fs_list2(const fat12_directory_entry *entry)
+size_t fs_clusters(uint16_t cluster)
 {
-    // Compute cluster offset (LBA).
-    uint32_t lba_offset = (entry->cluster_high << 16) | entry->cluster_low;
+    // Check if cluster is within range of valid cluster values.
+    size_t len = 0;
+    while (cluster >= 0x2 && cluster <= 0xFEF)
+    {
+        cluster = fs_next_cluster(cluster);
+        len++;
+    }
+    return len;
+}
+
+void fs_read_cluster(uint16_t *buffer, uint16_t cluster)
+{
+    // Compute data offset (LBA).
+    uint32_t lba_offset = cluster;
     lba_offset -= 2;
     lba_offset *= bios_parameter_block->sectors_per_cluster;
 
-    uint32_t *buffer = (uint32_t *)malloc(bios_parameter_block->bytes_per_sector);
+    // Read cluster.
+    ata_read(buffer, ATA_BUS_PRIMARY, lba_data + lba_offset, bios_parameter_block->sectors_per_cluster);
+}
 
-    ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_data + lba_offset, 1);
+void *fs_read_file(const fat12_directory_entry *entry)
+{
+    // Compute cluster and clusters.
+    uint16_t cluster = (entry->cluster_high << 16) | entry->cluster_low;
+    size_t clusters = fs_clusters(cluster);
+    size_t cluster_size = bios_parameter_block->bytes_per_sector * bios_parameter_block->sectors_per_cluster;
 
-    // fat12_directory_entry *entries = (fat12_directory_entry *)buffer;
-    fs_print((fat12_directory_entry *)buffer, bios_parameter_block->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE);
-
-    // TODO: Check next cluster...
-    uint16_t cluster = fs_next_cluster((entry->cluster_high << 16) | entry->cluster_low);
-    debug("cluster: %x", cluster);
-
-    free(buffer);
+    // Allocate buffer for entire file.
+    uint8_t *buffer = (uint8_t *)malloc(cluster_size * clusters);
+    for (size_t i = 0; i < clusters; i++)
+    {
+        if (i > 0)
+        {
+            cluster = fs_next_cluster(cluster);
+        }
+        debug("%x", cluster);
+        fs_read_cluster((uint16_t *)(&buffer[cluster_size * i]), cluster);
+    }
+    return buffer;
 }
 
 void fs_list(const string path)
@@ -145,14 +170,41 @@ void fs_list(const string path)
     // fs_print(entries, bios_parameter_block->directory_entries);
 
     fat12_directory_entry *entry = fs_find(entries, bios_parameter_block->directory_entries, "DATA1      ", FAT12_ATTRIBUTE_DIRECTORY);
+    // fat12_directory_entry *entry = fs_find(entries, bios_parameter_block->directory_entries, "KERNEL  BIN", FAT12_ATTRIBUTE_ARCHIVE);
     if (entry)
     {
-        // printf("%s %d %d", entry->filename, entry->cluster_low, entry->size);
-        fs_list2(entry);
+        entries = (fat12_directory_entry *)fs_read_file(entry);
+        entry = fs_find(entries, bios_parameter_block->directory_entries, "DATA2      ", FAT12_ATTRIBUTE_DIRECTORY);
+
+        // fat12_directory_entry *entry = fs_find(entries, bios_parameter_block->directory_entries, "KERNEL  BIN", FAT12_ATTRIBUTE_ARCHIVE);
+        if (entry)
+        {
+            entries = (fat12_directory_entry *)fs_read_file(entry);
+            fs_print(entries, directory_size);
+
+            entry = fs_find(entries, bios_parameter_block->directory_entries, "LOREM   TXT", FAT12_ATTRIBUTE_ARCHIVE);
+            if (entry)
+            {
+                void *file = fs_read_file(entry);
+                debug("%s", file);
+                free(file);
+            }
+            else
+            {
+                printf("%s", "3 not found");
+            }
+        }
+        else
+        {
+            printf("%s", "2 not found");
+        }
+
+        // void *file = fs_read_file(entry);
+        // free(file);
     }
     else
     {
-        printf("%s", "not found");
+        printf("%s", "1 not found");
     }
 
     free(buffer);

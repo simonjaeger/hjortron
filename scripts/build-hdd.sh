@@ -2,6 +2,7 @@
 
 # Create loopback device.
 dd if=/dev/zero of=bin/hdd.img bs=1048576 count=32
+# dd if=/dev/zero of=bin/hdd.img bs=1048576 count=4
 sudo losetup /dev/loop0 bin/hdd.img
 
 # Format as FAT12.
@@ -20,6 +21,7 @@ sudo mkdir /mnt/data1
 sudo mkdir /mnt/data1/data2
 sudo echo "test1" > /mnt/data1/test1.txt
 sudo echo "test2" > /mnt/data1/data2/test2.txt
+sudo cp scripts/lorem.txt /mnt/data1/data2
 
 # Unmount and destroy device.
 sudo umount /mnt
