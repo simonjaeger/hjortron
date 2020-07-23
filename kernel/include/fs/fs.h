@@ -5,11 +5,13 @@
 #include "types.h"
 #include "string.h"
 
+#define FILE_NAME_LENGTH 256
+
 struct fs_driver;
 
 typedef struct fs_file
 {
-    char name[256];
+    char name[FILE_NAME_LENGTH];
     uint32_t length;
     uint32_t offset;
     uint32_t inode;

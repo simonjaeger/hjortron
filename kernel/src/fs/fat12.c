@@ -46,21 +46,10 @@ uint16_t fat12_read_fat(uint16_t cluster)
     return next_cluster & 0xFFF;
 }
 
-void fat12_read_cluster(uint16_t *buffer, uint16_t cluster)
-{
-    // Compute data offset (LBA).
-    uint32_t lba_offset = cluster;
-    lba_offset -= 2;
-    lba_offset *= bpb->sectors_per_cluster;
-
-    // Read cluster.
-    ata_read(buffer, ATA_BUS_PRIMARY, lba_data + lba_offset, bpb->sectors_per_cluster);
-}
-
-void fat12_read_cluster_chain(uint16_t cluster)
+void fat12_read_cluster_chain(uint32_t **buffer, size_t *len, uint16_t cluster)
 {
     size_t clusters[256];
-    size_t len = 0;
+    *len = 0;
     for (size_t i = 0; i < 256; i++)
     {
         // Check if cluster is within range of valid cluster values.
@@ -69,18 +58,22 @@ void fat12_read_cluster_chain(uint16_t cluster)
             break;
         }
 
-        clusters[len++] = cluster;
+        clusters[(*len)++] = cluster;
         cluster = fat12_read_fat(cluster);
     }
 
     // Allocate buffer for entire chain.
-    uint8_t *buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * len);
-    for (size_t i = 0; i < len; i++)
+    *buffer = (uint32_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * *len);
+    for (size_t i = 0; i < *len; i++)
     {
-        debug("%x", cluster);
-        // fat12_read_cluster((uint16_t *)(&buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), clusters[i]);
+        // Compute data offset (LBA).
+        uint32_t lba_offset = clusters[i];
+        lba_offset -= 2;
+        lba_offset *= bpb->sectors_per_cluster;
+
+        // Read cluster.
+        ata_read((uint16_t *)(buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), ATA_BUS_PRIMARY, lba_data + lba_offset, bpb->sectors_per_cluster);
     }
-    return buffer;
 }
 
 void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t cluster)
@@ -94,13 +87,17 @@ void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t
         return;
     }
 
-    // fat12_read_cluster_chain()
+    // Read entrie chain of clusters for directory.
+    size_t chain_len = 0;
+    fat12_read_cluster_chain((uint32_t **)entries, &chain_len, cluster);
+    *len = chain_len * bpb->sectors_per_cluster * bpb->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE;
 }
 
 fs_file *fat12_open(string path)
 {
     debug("open path=%s", path);
 
+    // Read root directory.
     fat12_directory_entry *entries;
     size_t entries_len = bpb->directory_entries;
     fat12_read_directory(&entries, &entries_len, 0);
@@ -139,9 +136,17 @@ fs_file *fat12_open(string path)
                 return NULL;
             }
 
-            // FILE TIME.
+            // Create file.
+            fs_file *file = (fs_file *)malloc(sizeof(fs_file));
+            strset(file->name, '\0', FILE_NAME_LENGTH);
+            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH);
 
-            break;
+            file->inode = (entry->cluster_high << 16) | entry->cluster_low;
+            file->length = entry->size;
+
+            // Deallocate previous buffer.
+            free(entries);
+            return file;
         }
         else if (path[j] == '/')
         {
@@ -164,10 +169,12 @@ fs_file *fat12_open(string path)
                 return NULL;
             }
 
-            // Deallocate previous buffer.
+            // Compute cluster and deallocate previous buffer.
+            uint16_t cluster = (entry->cluster_high << 16) | entry->cluster_low;
             free(entries);
 
             // Read directory.
+            fat12_read_directory(&entries, &entries_len, cluster);
 
             // Clear buffer.
             strset(buffer, '\0', FAT12_FILENAME_LENGTH);
@@ -182,29 +189,6 @@ fs_file *fat12_open(string path)
         }
 
         buffer[i++] = path[j++];
-    }
-
-    // size_t path_len = strlen(path);
-    // char path_buffer[12];
-    // strset(path_buffer, '\0', 12);
-
-    // for (size_t i = 0; i < 11; i++)
-    // {
-
-    // }
-
-    // uint32_t *buffer = (uint32_t *)malloc(bpb->bytes_per_sector);
-
-    // size_t lba = lba_root;
-    // size_t sector_count = bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bpb->bytes_per_sector;
-
-    // for (size_t i = 0; i < sector_count; i++)
-    // {
-    //     ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba, 1);
-    // }
-
-    if (path)
-    {
     }
     return NULL;
 }

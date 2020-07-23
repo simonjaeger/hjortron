@@ -86,7 +86,7 @@ void main(const boot_info *boot_info)
     serial_init(SERIAL_COM1);
     ata_init();
 
-    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb, "C");
+    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb, "H");
     // __attribute__((unused)) fs_file *file = fat12_driver->open("KERNEL  BIN");
     __attribute__((unused)) fs_file *file = fat12_driver->open("DATA1      /DATA2      /LOREM   TXT");
 
@@ -96,6 +96,7 @@ void main(const boot_info *boot_info)
     }
     else
     {
+        // fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
         printf("Opened file: \"%s\", %d bytes, %d inode \n", file->name, file->length, file->inode);
     }
 

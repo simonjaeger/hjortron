@@ -123,7 +123,7 @@ void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_coun
 
     outb(bus + ATA_OFFSET_COMMAND, ATA_COMMAND_READ);
 
-    debug("read, sector=%d, count=%d", lba, sector_count);
+    debug("read, sector=%d, count=%d, buffer=%lx", lba, sector_count, ((uint32_t)buffer));
 
     for (size_t i = 0; i < sector_count; i++)
     {
