@@ -3,11 +3,14 @@
 #include "memory/malloc.h"
 #include "debug.h"
 
+
 // TODO: Move to driver specific metadata.
+// TODO: Support ATA_BUS_SECONDARY.
 static fat12_extended_bios_parameter_block *bpb;
 static size_t lba_fat1;
 static size_t lba_root;
 static size_t lba_data;
+static size_t ata_bus;
 
 bool fat12_strcmp(string str1, string str2, size_t len)
 {
@@ -30,7 +33,7 @@ uint16_t fat12_read_fat(uint16_t cluster)
 
     // Read FAT.
     uint8_t *buffer = (uint8_t *)malloc(bpb->bytes_per_sector);
-    ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_fat1 + lba_offset, 1);
+    ata_read((uint16_t *)buffer, ata_bus, lba_fat1 + lba_offset, 1);
 
     // TODO: Cache buffer.
 
@@ -62,7 +65,7 @@ void fat12_read_cluster_chain(uint32_t **buffer, size_t *len, uint16_t cluster)
         cluster = fat12_read_fat(cluster);
     }
 
-    // Allocate buffer for entire chain.
+    // Allocate buffer for chain.
     *buffer = (uint32_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * *len);
     for (size_t i = 0; i < *len; i++)
     {
@@ -72,22 +75,23 @@ void fat12_read_cluster_chain(uint32_t **buffer, size_t *len, uint16_t cluster)
         lba_offset *= bpb->sectors_per_cluster;
 
         // Read cluster.
-        ata_read((uint16_t *)(buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), ATA_BUS_PRIMARY, lba_data + lba_offset, bpb->sectors_per_cluster);
+        ata_read((uint16_t *)(buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), ata_bus, lba_data + lba_offset, bpb->sectors_per_cluster);
     }
 }
 
 void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t cluster)
 {
+    // Read root directory, consecutive sectors.
     if (!cluster)
     {
         uint32_t *buffer = (uint32_t *)malloc(bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE);
-        ata_read((uint16_t *)buffer, ATA_BUS_PRIMARY, lba_root, bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bpb->bytes_per_sector);
+        ata_read((uint16_t *)buffer, ata_bus, lba_root, bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bpb->bytes_per_sector);
         *entries = (fat12_directory_entry *)buffer;
         *len = bpb->directory_entries;
         return;
     }
 
-    // Read entrie chain of clusters for directory.
+    // Read chain of clusters for directory.
     size_t chain_len = 0;
     fat12_read_cluster_chain((uint32_t **)entries, &chain_len, cluster);
     *len = chain_len * bpb->sectors_per_cluster * bpb->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE;
@@ -141,8 +145,8 @@ fs_file *fat12_open(string path)
             strset(file->name, '\0', FILE_NAME_LENGTH);
             strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH);
 
-            file->inode = (entry->cluster_high << 16) | entry->cluster_low;
-            file->length = entry->size;
+            file->ref = (entry->cluster_high << 16) | entry->cluster_low;
+            file->len = entry->size;
 
             // Deallocate previous buffer.
             free(entries);
@@ -193,7 +197,7 @@ fs_file *fat12_open(string path)
     return NULL;
 }
 
-fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block, char mnt[7])
+fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block)
 {
     // Compute offsets within drive.
     bpb = (fat12_extended_bios_parameter_block *)(uint32_t)bios_parameter_block;
@@ -201,10 +205,12 @@ fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_
     lba_root = lba_fat1 + bpb->sectors_per_fat * bpb->fats;
     lba_data = lba_root + bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bpb->bytes_per_sector;
 
+    // TODO: Accept parameter for ATA bus.
+    ata_bus = ATA_BUS_PRIMARY;
+
     // Create driver.
     fs_driver *driver = (fs_driver *)malloc(sizeof(fs_driver));
-    strset(driver->mnt, '\0', 8);
-    strcpy(mnt, driver->mnt, 7);
+    driver->mnt = DRIVER_MOUNT_UNASSIGNED;
     driver->open = fat12_open;
 
     debug("initialized, fat1=%lx, root=%lx, data=%lx", ((uint64_t)lba_fat1), ((uint64_t)lba_root), ((uint64_t)lba_data));

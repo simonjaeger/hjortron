@@ -5,6 +5,64 @@
 #include "device/ata.h"
 #include "debug.h"
 
+#define DRIVERS_LENGTH 256
+
+static fs_driver *drivers[DRIVERS_LENGTH];
+
+void fs_mount(fs_driver *driver, char mnt)
+{
+    for (size_t i = 0; i < DRIVERS_LENGTH; i++)
+    {
+        // Check for available driver slot.
+        if (drivers[i] != NULL)
+        {
+            continue;
+        }
+
+        drivers[i] = driver;
+        drivers[i]->mnt = mnt;
+        debug("mount driver, mnt=%c", mnt);
+        return;
+    }
+    debug("%s", "cannot mount driver");
+}
+
+fs_file *fs_open(string path)
+{
+    // Check for proper mount format.
+    if (path[0] != '/' || path[2] != '/')
+    {
+        debug("%s", "invalid path");
+        return NULL;
+    }
+    path++;
+
+    for (size_t i = 0; i < DRIVERS_LENGTH; i++)
+    {
+        // Check for end of driver array.
+        if (drivers[i] == NULL)
+        {
+            break;
+        }
+
+        // Check for correct driver.
+        if (drivers[i]->mnt != path[0])
+        {
+            continue;
+        }
+
+        path += 2;
+
+        // Open file and assign driver.
+        fs_file *file = drivers[i]->open(path);
+        file->driver = drivers[i];
+        return file;
+    }
+
+    debug("%s", "cannot find driver");
+    return NULL;
+}
+
 static fat12_extended_bios_parameter_block *bios_parameter_block = NULL;
 static size_t lba_fat1;
 static size_t lba_root;

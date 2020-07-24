@@ -86,9 +86,11 @@ void main(const boot_info *boot_info)
     serial_init(SERIAL_COM1);
     ata_init();
 
-    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb, "H");
-    // __attribute__((unused)) fs_file *file = fat12_driver->open("KERNEL  BIN");
-    __attribute__((unused)) fs_file *file = fat12_driver->open("DATA1      /DATA2      /LOREM   TXT");
+    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
+    fs_mount(fat12_driver, 'H');
+
+    
+    fs_file *file = fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
 
     if (file == NULL)
     {
@@ -97,7 +99,7 @@ void main(const boot_info *boot_info)
     else
     {
         // fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
-        printf("Opened file: \"%s\", %d bytes, %d inode \n", file->name, file->length, file->inode);
+        printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
     }
 
     // fs_init(boot_info);

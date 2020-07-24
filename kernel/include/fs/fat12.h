@@ -58,7 +58,7 @@ typedef struct fat12_directory_entry
 #define FAT12_ATTRIBUTE_ARCHIVE 0x20
 #define FAT12_ATTRIBUTE_LFN 0xF
 
-fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block, char mnt[7]);
+fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block);
 void fat12_destroy(fs_driver *driver);
 
 #endif // FS_FAT12_H_
