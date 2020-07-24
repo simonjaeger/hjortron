@@ -73,7 +73,7 @@ void main(const boot_info *boot_info)
     mmap_info(&boot_info->memory_map);
 
     // TODO: Find appropriate memory map entry for dynamic memory.
-    malloc_init(0x30000, 1024 * 1024);
+    malloc_init(0x30000, 1024 * 1024 * 16);
 
     irq_init();
     pic_init();
@@ -90,6 +90,7 @@ void main(const boot_info *boot_info)
     fs_mount(fat12_driver, 'H');
 
     fs_file *file = fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
+    // fs_file *file = fs_open("/H/KERNEL  BIN");
 
     if (file == NULL)
     {
@@ -99,8 +100,17 @@ void main(const boot_info *boot_info)
     {
         printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
 
-        uint32_t *buffer = (uint32_t *)malloc(512);
-        fs_read(file, buffer, 512);
+        uint32_t *buffer = (uint32_t *)malloc(65);
+        strset((string)buffer, '\0', 65);
+        while (file->offset < file->len)
+        // for (size_t i = 0; i < 2; i++)
+        {
+            fs_read(file, buffer, 64);
+            // printf("%s", buffer);
+            debug("%s", buffer);
+            debug("%x %x", file->offset, file->len);
+        }
+
         free(buffer);
     }
 

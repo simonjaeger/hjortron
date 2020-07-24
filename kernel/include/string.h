@@ -13,11 +13,12 @@ void strset(string str, char c, size_t len);
 
 string reverse(string str, size_t i, size_t j);
 
-
 // void atoi(string str, int *i);
 string itoa(int32_t i, string str, size_t base);
 
 void sprintf(string str, string format, ...);
 void sprintf_va(string str, string format, __builtin_va_list ap);
+
+void memcpy(void *dest, void *src, size_t len);
 
 #endif // STRING_H_

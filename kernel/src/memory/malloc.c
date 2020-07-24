@@ -81,6 +81,13 @@ void free(void *ptr)
     }
 
     memory_chunk *chunk = (memory_chunk *)((uint32_t)ptr - sizeof(memory_chunk));
+
+    if (!chunk->allocated)
+    {
+        debug("%s", "cannot deallocate chunk");
+        return;
+    }
+
     chunk->allocated = false;
     debug("freed %d bytes", chunk->size);
 

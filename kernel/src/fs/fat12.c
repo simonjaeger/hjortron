@@ -23,6 +23,21 @@ bool fat12_strcmp(string str1, string str2, size_t len)
     return true;
 }
 
+bool fat12_valid_cluster(uint16_t cluster)
+{
+    // Check if cluster is within range of valid cluster values.
+    return cluster >= 0x2 && cluster <= 0xFEF;
+}
+
+uint32_t fat12_cluster_lba(uint16_t cluster)
+{
+    // Compute LBA.
+    uint32_t lba_offset = cluster;
+    lba_offset -= 2;
+    lba_offset *= bpb->sectors_per_cluster;
+    return lba_data + lba_offset;
+}
+
 uint16_t fat12_read_fat(uint16_t cluster)
 {
     // Compute offsets.
@@ -37,8 +52,11 @@ uint16_t fat12_read_fat(uint16_t cluster)
     // TODO: Cache buffer.
 
     // Get next cluster and deallocate buffer.
-    uint16_t next_cluster = *((uint16_t *)&buffer[sector_offset]);
+    uint16_t next_cluster = ((uint16_t *)(&buffer[sector_offset]))[0];
+    debug("%s %x", "TEST1", next_cluster);
+
     free(buffer);
+    debug("%s", "TEST2");
 
     // Remove 4 bits from the value that belong to another cluster.
     if (cluster & 1)
@@ -48,33 +66,30 @@ uint16_t fat12_read_fat(uint16_t cluster)
     return next_cluster & 0xFFF;
 }
 
-void fat12_read_cluster_chain(uint32_t **buffer, size_t *len, uint16_t cluster)
+void fat12_read_cluster_chain(uint8_t **buffer, size_t *len, uint16_t cluster)
 {
     size_t clusters[256];
     *len = 0;
     for (size_t i = 0; i < 256; i++)
     {
-        // Check if cluster is within range of valid cluster values.
-        if (cluster < 0x2 || cluster > 0xFEF)
+        if (!fat12_valid_cluster(cluster))
         {
             break;
         }
 
+        // Get next cluster.
         clusters[(*len)++] = cluster;
         cluster = fat12_read_fat(cluster);
     }
 
     // Allocate buffer for chain.
-    *buffer = (uint32_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * *len);
+    *buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * *len);
+
+    // Read clusters.
     for (size_t i = 0; i < *len; i++)
     {
-        // Compute data offset (LBA).
-        uint32_t lba_offset = clusters[i];
-        lba_offset -= 2;
-        lba_offset *= bpb->sectors_per_cluster;
-
-        // Read cluster.
-        ata_read((uint16_t *)(buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), ata_bus, lba_data + lba_offset, bpb->sectors_per_cluster);
+        uint32_t lba = fat12_cluster_lba(clusters[i]);
+        ata_read((uint16_t *)(buffer[bpb->bytes_per_sector * bpb->sectors_per_cluster * i]), ata_bus, lba, bpb->sectors_per_cluster);
     }
 }
 
@@ -92,7 +107,7 @@ void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t
 
     // Read chain of clusters for directory.
     size_t chain_len = 0;
-    fat12_read_cluster_chain((uint32_t **)entries, &chain_len, cluster);
+    fat12_read_cluster_chain((uint8_t **)entries, &chain_len, cluster);
     *len = chain_len * bpb->sectors_per_cluster * bpb->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE;
 }
 
@@ -142,7 +157,7 @@ fs_file *fat12_open(string path)
             // Create file.
             fs_file *file = (fs_file *)malloc(sizeof(fs_file));
             strset(file->name, '\0', FILE_NAME_LENGTH);
-            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH - 1);
+            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH);
 
             file->ref = (entry->cluster_high << 16) | entry->cluster_low;
             file->len = entry->size;
@@ -205,19 +220,91 @@ void fat12_close(fs_file *file)
 
 void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    debug("read, file=%s, buffer=%x, length=%x", file->name, ((uint32_t)buffer), len);
+    debug("read, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
+
+    if (file->offset + len > file->len)
+    {
+        len = file->len - file->offset;
+    }
+
+    if (len == 0)
+    {
+        return;
+    }
+
+    // Compute clusters and offsets.
+    size_t cluster_begin = file->offset / bpb->bytes_per_sector / bpb->sectors_per_cluster;
+    size_t offset_begin = file->offset % (bpb->bytes_per_sector * bpb->sectors_per_cluster);
+    size_t cluster_end = (file->offset + len) / bpb->bytes_per_sector / bpb->sectors_per_cluster;
+    size_t offset_end = (file->offset + len) % (bpb->bytes_per_sector * bpb->sectors_per_cluster);
+
+    // Allocate buffer to copy requested parts of bytes from.
+    uint8_t *src_buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster);
+    uint8_t *dest_buffer = (uint8_t *)buffer;
+
+    // Iterate the cluster chain from the start.
+    size_t cluster = file->ref;
+    size_t dest_offset = 0;
+    size_t src_offset = 0;
+    size_t src_len = 0;
+
+    for (size_t i = 0; i <= cluster_end; i++)
+    {
+        if (!fat12_valid_cluster(cluster))
+        {
+            debug("%s", "invalid cluster");
+            return;
+        }
+
+        if (i >= cluster_begin && i <= cluster_end)
+        {
+            // Read cluster.
+            uint32_t lba = fat12_cluster_lba(cluster);
+            ata_read((uint16_t *)src_buffer, ata_bus, lba, bpb->sectors_per_cluster);
+
+            // Determine slice of buffer to copy to destination buffer.
+            if (i == cluster_begin && i == cluster_begin)
+            {
+                src_offset = offset_begin;
+                src_len = offset_end - offset_begin;
+            }
+            else if (i == cluster_begin)
+            {
+                src_offset = offset_begin;
+                src_len = bpb->bytes_per_sector * bpb->sectors_per_cluster - offset_begin;
+            }
+            else if (i == cluster_end)
+            {
+                src_offset = 0;
+                src_len = offset_end;
+            }
+
+            // Copy slice and increment buffer and file offset.
+            memcpy((void *)&dest_buffer[dest_offset], (void *)&src_buffer[src_offset], src_len);
+            dest_offset += src_len;
+            file->offset += src_len;
+        }
+
+        // Get next cluster, if any.
+        if (i != cluster_end)
+        {
+            cluster = fat12_read_fat(cluster);
+        }
+    }
+
+    free(src_buffer);
 }
 
 void fat12_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    debug("write, file=%s, buffer=%x, length=%x", file->name, ((uint32_t)buffer), len);
+    debug("write, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
     debug("%s", "not implemented");
 }
 
 void fat12_seek(fs_file *file, uint32_t offset)
 {
-    debug("seek, file=%s, offset=%d", file->name, offset);
-    file->offset = file->len > offset ? file->len : offset;
+    debug("seek, file=%s, ref=%x, offset=%x", file->name, file->ref, offset);
+    file->offset = (file->offset + offset > file->len) ? file->len : offset;
 }
 
 fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block)

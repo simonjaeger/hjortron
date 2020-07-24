@@ -236,3 +236,14 @@ void sprintf_va(string str, string format, __builtin_va_list ap)
 
     str[j] = '\0';
 }
+
+void memcpy(void *dest, void *src, size_t len)
+{
+    char *src2 = (char *)src;
+    char *dest2 = (char *)dest;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        dest2[i] = src2[i];
+    }
+}
