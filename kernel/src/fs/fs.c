@@ -63,6 +63,57 @@ fs_file *fs_open(string path)
     return NULL;
 }
 
+void fs_read(fs_file *file, uint32_t *buffer, uint32_t len)
+{
+    if (file == NULL)
+    {
+        debug("%s", "invalid file");
+        return;
+    }
+
+    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
+    {
+        debug("%s", "cannot find driver");
+        return;
+    }
+
+    file->driver->read(file, buffer, len);
+}
+
+void fs_write(fs_file *file, uint32_t *buffer, uint32_t len)
+{
+    if (file == NULL)
+    {
+        debug("%s", "invalid file");
+        return;
+    }
+
+    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
+    {
+        debug("%s", "cannot find driver");
+        return;
+    }
+
+    file->driver->write(file, buffer, len);
+}
+
+void fs_seek(fs_file *file, uint32_t offset)
+{
+    if (file == NULL)
+    {
+        debug("%s", "invalid file");
+        return;
+    }
+
+    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
+    {
+        debug("%s", "cannot find driver");
+        return;
+    }
+
+    file->driver->seek(file, offset);
+}
+
 static fat12_extended_bios_parameter_block *bios_parameter_block = NULL;
 static size_t lba_fat1;
 static size_t lba_root;

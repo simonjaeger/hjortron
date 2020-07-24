@@ -3,7 +3,6 @@
 #include "memory/malloc.h"
 #include "debug.h"
 
-
 // TODO: Move to driver specific metadata.
 // TODO: Support ATA_BUS_SECONDARY.
 static fat12_extended_bios_parameter_block *bpb;
@@ -99,7 +98,7 @@ void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t
 
 fs_file *fat12_open(string path)
 {
-    debug("open path=%s", path);
+    debug("open, path=%s", path);
 
     // Read root directory.
     fat12_directory_entry *entries;
@@ -143,10 +142,11 @@ fs_file *fat12_open(string path)
             // Create file.
             fs_file *file = (fs_file *)malloc(sizeof(fs_file));
             strset(file->name, '\0', FILE_NAME_LENGTH);
-            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH);
+            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH - 1);
 
             file->ref = (entry->cluster_high << 16) | entry->cluster_low;
             file->len = entry->size;
+            file->offset = 0;
 
             // Deallocate previous buffer.
             free(entries);
@@ -197,6 +197,29 @@ fs_file *fat12_open(string path)
     return NULL;
 }
 
+void fat12_close(fs_file *file)
+{
+    debug("close, file=%s", file->name);
+    free(file);
+}
+
+void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
+{
+    debug("read, file=%s, buffer=%x, length=%x", file->name, ((uint32_t)buffer), len);
+}
+
+void fat12_write(fs_file *file, uint32_t *buffer, uint32_t len)
+{
+    debug("write, file=%s, buffer=%x, length=%x", file->name, ((uint32_t)buffer), len);
+    debug("%s", "not implemented");
+}
+
+void fat12_seek(fs_file *file, uint32_t offset)
+{
+    debug("seek, file=%s, offset=%d", file->name, offset);
+    file->offset = file->len > offset ? file->len : offset;
+}
+
 fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block)
 {
     // Compute offsets within drive.
@@ -212,6 +235,10 @@ fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_
     fs_driver *driver = (fs_driver *)malloc(sizeof(fs_driver));
     driver->mnt = DRIVER_MOUNT_UNASSIGNED;
     driver->open = fat12_open;
+    driver->close = fat12_close;
+    driver->read = fat12_read;
+    driver->write = fat12_write;
+    driver->seek = fat12_seek;
 
     debug("initialized, fat1=%lx, root=%lx, data=%lx", ((uint64_t)lba_fat1), ((uint64_t)lba_root), ((uint64_t)lba_data));
     return driver;

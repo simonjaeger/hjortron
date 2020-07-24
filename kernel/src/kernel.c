@@ -89,7 +89,6 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
-    
     fs_file *file = fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
 
     if (file == NULL)
@@ -98,8 +97,11 @@ void main(const boot_info *boot_info)
     }
     else
     {
-        // fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
         printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
+
+        uint32_t *buffer = (uint32_t *)malloc(512);
+        fs_read(file, buffer, 512);
+        free(buffer);
     }
 
     // fs_init(boot_info);
