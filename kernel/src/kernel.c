@@ -102,12 +102,15 @@ void main(const boot_info *boot_info)
 
         uint32_t *buffer = (uint32_t *)malloc(65);
         strset((string)buffer, '\0', 65);
-        while (file->offset < file->len)
-        // for (size_t i = 0; i < 2; i++)
+        // while (file->offset < file->len)
+
+        // fs_seek(file, 64 * 100);
+        fs_seek(file, 0x780);
+        for (size_t i = 0; i < 2; i++)
         {
             fs_read(file, buffer, 64);
             // printf("%s", buffer);
-            debug("%s", buffer);
+            // debug("%s", buffer);
             debug("%x %x", file->offset, file->len);
         }
 

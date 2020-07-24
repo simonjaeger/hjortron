@@ -53,10 +53,8 @@ uint16_t fat12_read_fat(uint16_t cluster)
 
     // Get next cluster and deallocate buffer.
     uint16_t next_cluster = ((uint16_t *)(&buffer[sector_offset]))[0];
-    debug("%s %x", "TEST1", next_cluster);
 
     free(buffer);
-    debug("%s", "TEST2");
 
     // Remove 4 bits from the value that belong to another cluster.
     if (cluster & 1)
