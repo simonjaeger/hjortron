@@ -1,5 +1,5 @@
-#ifndef FS_FS_H
-#define FS_FS_H
+#ifndef FILESYSTEM_FS_H
+#define FILESYSTEM_FS_H
 
 #include "boot.h"
 #include "types.h"
@@ -32,17 +32,12 @@ typedef struct fs_driver
     void (*seek)(fs_file *file, uint32_t offset);
 } fs_driver;
 
-void fs_mount(fs_driver *driver, char mnt);
-
 fs_file *fs_open(string path);
 void fs_close(fs_file *file);
 void fs_read(fs_file *file, uint32_t *buffer, uint32_t len);
 void fs_write(fs_file *file, uint32_t *buffer, uint32_t len);
 void fs_seek(fs_file *file, uint32_t offset);
 
-void fs_init(const boot_info *boot_info);
-void fs_list(const string path);
+void fs_mount(fs_driver *driver, char mnt);
 
-void fs_ls_test();
-
-#endif // FS_FS_H
+#endif // FILESYSTEM_FS_H

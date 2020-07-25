@@ -15,8 +15,8 @@
 #include "device/ata.h"
 #include "debug.h"
 
-#include "fs/fs.h"
-#include "fs/fat12.h"
+#include "filesystem/fs.h"
+#include "filesystem/fat12.h"
 
 void disk_info(const boot_info *boot_info)
 {
@@ -101,21 +101,22 @@ void main(const boot_info *boot_info)
     {
         printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
 
-        size_t buffer_size = 512;
+        size_t buffer_size = 1024;
         uint32_t *buffer = (uint32_t *)malloc(buffer_size + 1);
 
         // fs_seek(file, 0x880);
-        // while (file->offset < file->len)
-        for (size_t i = 0; i < 5 * 8; i++)
+        while (file->offset < file->len)
+        // for (size_t i = 0; i < 5 * 8; i++)
         {
             strset((string)buffer, '\0', buffer_size + 1);
             fs_read(file, buffer, buffer_size);
             printf("%s", buffer);
-            debug("%s", buffer);
+            // debug("%s", buffer);
 
-            debug("%x %x", file->offset, file->len);
+            // debug("%x %x", file->offset, file->len);
         }
 
+        fs_close(file);
 
         free(buffer);
     }

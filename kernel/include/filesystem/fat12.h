@@ -1,9 +1,9 @@
-#ifndef FS_FAT12_H_
-#define FS_FAT12_H_
+#ifndef FILESYSTEM_FAT12_H_
+#define FILESYSTEM_FAT12_H_
 
 #include "types.h"
 #include "boot.h"
-#include "fs/fs.h"
+#include "filesystem/fs.h"
 
 typedef struct fat12_extended_bios_parameter_block
 {
@@ -61,4 +61,4 @@ typedef struct fat12_directory_entry
 fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block);
 void fat12_destroy(fs_driver *driver);
 
-#endif // FS_FAT12_H_
+#endif // FILESYSTEM_FAT12_H_
