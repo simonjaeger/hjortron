@@ -15,6 +15,9 @@
 #include "device/ata.h"
 #include "debug.h"
 
+#include "filesystem/fs.h"
+#include "filesystem/fat12.h"
+
 void disk_info(const boot_info *boot_info)
 {
     string type;
@@ -62,15 +65,16 @@ void mmap_info(const memory_map *memory_map)
 
 void main(const boot_info *boot_info)
 {
+    display_init();
+
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
-    enable_cursor();
 
     disk_info(boot_info);
     cpuid_info(&boot_info->cpuid);
     mmap_info(&boot_info->memory_map);
 
     // TODO: Find appropriate memory map entry for dynamic memory.
-    malloc_init(0x20000, 64 * 1024);
+    malloc_init(0x30000, 1024 * 1024 * 16);
 
     irq_init();
     pic_init();
@@ -82,6 +86,10 @@ void main(const boot_info *boot_info)
 
     serial_init(SERIAL_COM1);
     ata_init();
+
+    // TODO: Skip if there is no disk on primary ATA bus.
+    fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
+    fs_mount(fat12_driver, 'H');
 
     while (1)
         ;

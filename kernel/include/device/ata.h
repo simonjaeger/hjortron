@@ -31,7 +31,12 @@ typedef struct ata_identify_device_data
     // TODO: ...
 } ata_identify_device_data;
 
+#define ATA_BUS_PRIMARY 0x1F0
+#define ATA_BUS_SECONDARY 0x170
+
 void ata_init();
 void ata_string_swap(string buffer, uint8_t *data, size_t length);
+
+void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_count);
 
 #endif // ATA_H_

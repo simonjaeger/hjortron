@@ -6,9 +6,10 @@
 typedef char *string;
 
 size_t strlen(const string str);
-// u32 strcmp(const string str1, const string str2);
-void strcpy(string src, string dest, size_t *offset);
+size_t strcmp(const string str1, const string str2);
+void strcpy(string src, string dest, size_t len);
 void strtrim(string str, char c);
+void strset(string str, char c, size_t len);
 
 string reverse(string str, size_t i, size_t j);
 
@@ -17,5 +18,7 @@ string itoa(int32_t i, string str, size_t base);
 
 void sprintf(string str, string format, ...);
 void sprintf_va(string str, string format, __builtin_va_list ap);
+
+void memcpy(void *dest, void *src, size_t len);
 
 #endif // STRING_H_

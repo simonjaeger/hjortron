@@ -20,27 +20,44 @@ typedef struct text_data
 } __attribute__((packed)) text_data;
 
 static text_data *buffer = (text_data *)DISPLAY_MEMORY;
-static size_t position = 0;
+static size_t cursor;
 
-void putcf(const char c, const text_attribute attribute)
+void display_init()
 {
-    if (!c)
-    {
-        return;
-    }
+    cursor = 0;
 
-    if (c == '\n')
-    {
-        // Increment position to the next line.
-        position += DISPLAY_WIDTH - (position % DISPLAY_WIDTH);
-        set_cursor(position);
-        return;
-    }
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, (inb(0x3D5) & 0xC0) | CURSOR_SCANLINE_START);
+    outb(0x3D4, 0x0B);
+    outb(0x3D5, (inb(0x3D5) & 0xE0) | CURSOR_SCANLINE_END);
 
+    display_clear();
+}
+
+void display_destroy()
+{
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, 0x20);
+}
+
+void display_clear()
+{
+    for (size_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++)
+    {
+        buffer[i].code = 0;
+        buffer[i].foreground = DEFAULT_FOREGROUND;
+        buffer[i].background = DEFAULT_BACKGROUND;
+    }
+    cursor = 0;
+}
+
+void display_update_cursor()
+{
     // Shift buffer if needed to show the next row.
-    // TODO: Refactor and apply for new line as well.
-    if ((size_t)(position + 1) > DISPLAY_WIDTH * DISPLAY_HEIGHT)
+    if (cursor >= DISPLAY_WIDTH * DISPLAY_HEIGHT)
     {
+        cursor = DISPLAY_WIDTH * (DISPLAY_HEIGHT - 1);
+
         for (uint32_t i = 0; i < DISPLAY_WIDTH * (DISPLAY_HEIGHT - 1); i++)
         {
             buffer[i] = buffer[i + DISPLAY_WIDTH];
@@ -52,17 +69,37 @@ void putcf(const char c, const text_attribute attribute)
             buffer[i].foreground = DEFAULT_FOREGROUND;
             buffer[i].background = DEFAULT_BACKGROUND;
         }
+    }
 
-        position -= DISPLAY_WIDTH;
+    // Update cursor position.
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(cursor & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((cursor >> 8) & 0xFF));
+}
+
+void putcf(const char c, const text_attribute attribute)
+{
+    if (!c)
+    {
+        return;
+    }
+
+    if (c == '\n')
+    {
+        // Increment cursor to the next line.
+        cursor += DISPLAY_WIDTH - (cursor % DISPLAY_WIDTH);
+        display_update_cursor();
+        return;
     }
 
     // Set text data.
-    buffer[position].code = c;
-    buffer[position].foreground = attribute.foreground;
-    buffer[position].background = attribute.background;
+    buffer[cursor].code = c;
+    buffer[cursor].foreground = attribute.foreground;
+    buffer[cursor].background = attribute.background;
 
-    position++;
-    set_cursor(position);
+    cursor++;
+    display_update_cursor();
 }
 
 void putsf(string str, text_attribute attribute)
@@ -193,37 +230,4 @@ void printf(const string str, ...)
     }
 
     __builtin_va_end(ap);
-}
-
-void clear()
-{
-    for (size_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++)
-    {
-        buffer[i].code = 0;
-        buffer[i].foreground = DEFAULT_FOREGROUND;
-        buffer[i].background = DEFAULT_BACKGROUND;
-    }
-    position = 0;
-}
-
-void enable_cursor()
-{
-    outb(0x3D4, 0x0A);
-    outb(0x3D5, (inb(0x3D5) & 0xC0) | CURSOR_SCANLINE_START);
-    outb(0x3D4, 0x0B);
-    outb(0x3D5, (inb(0x3D5) & 0xE0) | CURSOR_SCANLINE_END);
-}
-
-void disable_cursor()
-{
-    outb(0x3D4, 0x0A);
-    outb(0x3D5, 0x20);
-}
-
-void set_cursor(size_t position)
-{
-    outb(0x3D4, 0x0F);
-    outb(0x3D5, (uint8_t)(position & 0xFF));
-    outb(0x3D4, 0x0E);
-    outb(0x3D5, (uint8_t)((position >> 8) & 0xFF));
 }
