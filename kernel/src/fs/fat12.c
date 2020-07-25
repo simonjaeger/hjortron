@@ -45,7 +45,7 @@ uint16_t fat12_read_fat(uint16_t cluster)
     size_t lba_offset = byte_offset / bpb->bytes_per_sector;
     size_t sector_offset = byte_offset % bpb->bytes_per_sector;
 
-    // Read FAT.
+    // Read sector.
     uint8_t *buffer = (uint8_t *)malloc(bpb->bytes_per_sector);
     ata_read((uint16_t *)buffer, ata_bus, lba_fat1 + lba_offset, 1);
 
@@ -236,7 +236,7 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
     size_t cluster_end = (file->offset + len) / bpb->bytes_per_sector / bpb->sectors_per_cluster;
     size_t offset_end = (file->offset + len) % (bpb->bytes_per_sector * bpb->sectors_per_cluster);
 
-    // Allocate buffer to copy requested parts of bytes from.
+    // Allocate buffer to copy slices from.
     uint8_t *src_buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster);
     uint8_t *dest_buffer = (uint8_t *)buffer;
 
@@ -261,7 +261,7 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
             ata_read((uint16_t *)src_buffer, ata_bus, lba, bpb->sectors_per_cluster);
 
             // Determine slice of buffer to copy to destination buffer.
-            if (i == cluster_begin && i == cluster_begin)
+            if (i == cluster_begin && i == cluster_end)
             {
                 src_offset = offset_begin;
                 src_len = offset_end - offset_begin;

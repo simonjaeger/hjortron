@@ -100,25 +100,22 @@ void main(const boot_info *boot_info)
     {
         printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
 
-        uint32_t *buffer = (uint32_t *)malloc(65);
-        strset((string)buffer, '\0', 65);
-        // while (file->offset < file->len)
+        size_t buffer_size = 2048;
+        uint32_t *buffer = (uint32_t *)malloc(buffer_size + 1);
 
-        // fs_seek(file, 64 * 100);
-        fs_seek(file, 0x780);
-        for (size_t i = 0; i < 2; i++)
+        // fs_seek(file, 0x880);
+        while (file->offset < file->len)
+        // for (size_t i = 0; i < 4; i++)
         {
-            fs_read(file, buffer, 64);
-            // printf("%s", buffer);
+            strset((string)buffer, '\0', buffer_size + 1);
+            fs_read(file, buffer, buffer_size);
+            printf("%s", buffer);
             // debug("%s", buffer);
-            debug("%x %x", file->offset, file->len);
+            // debug("%x %x", file->offset, file->len);
         }
 
         free(buffer);
     }
-
-    // fs_init(boot_info);
-    // fs_list("/");
 
     while (1)
         ;

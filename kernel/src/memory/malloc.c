@@ -21,11 +21,26 @@ void malloc_init(uint32_t heap_begin, uint32_t heap_size)
     start_chunk->next_chunk = NULL;
     start_chunk->previous_chunk = NULL;
     start_chunk->allocated = false;
-    start_chunk->size = heap_size;
+    start_chunk->size = heap_size - sizeof(memory_chunk);
 
     initialized = true;
 
     debug("begin=%x size=%x", heap_begin, heap_size);
+}
+
+size_t malloc_deallocated()
+{
+    size_t size = 0;
+    for (memory_chunk *current_chunk = start_chunk;
+         current_chunk != NULL;
+         current_chunk = current_chunk->next_chunk)
+    {
+        if (!current_chunk->allocated)
+        {
+            size += current_chunk->size + sizeof(memory_chunk);
+        }
+    }
+    return size;
 }
 
 void *malloc(uint32_t size)
@@ -35,7 +50,7 @@ void *malloc(uint32_t size)
         return NULL;
     }
 
-    // Find an unallocated chunk that is big enough.
+    // Find an deallocated chunk that is big enough.
     memory_chunk *current_chunk = NULL;
     for (current_chunk = start_chunk;
          current_chunk != NULL;
@@ -49,13 +64,14 @@ void *malloc(uint32_t size)
 
     if (current_chunk == NULL)
     {
+        debug("%s", "cannot find chunk");
         return NULL;
     }
 
     // Check if the chunk can be split.
     if (current_chunk->size > size + sizeof(memory_chunk))
     {
-        memory_chunk *new_chunk = (memory_chunk *)((uint32_t)current_chunk + size + sizeof(memory_chunk));
+        memory_chunk *new_chunk = (memory_chunk *)(((uint8_t *)current_chunk) + size + sizeof(memory_chunk));
         new_chunk->previous_chunk = current_chunk;
         new_chunk->next_chunk = current_chunk->next_chunk;
         new_chunk->allocated = false;
@@ -68,7 +84,7 @@ void *malloc(uint32_t size)
     }
 
     current_chunk->allocated = true;
-    debug("allocated %d bytes", size);
+    debug("allocate, size=%x/%x, current=%x next=%x", size, malloc_deallocated(), ((uint8_t *)current_chunk) + sizeof(memory_chunk), ((uint8_t *)current_chunk->next_chunk) + sizeof(memory_chunk));
 
     return (void *)((uint32_t)current_chunk + sizeof(memory_chunk));
 }
@@ -89,7 +105,7 @@ void free(void *ptr)
     }
 
     chunk->allocated = false;
-    debug("freed %d bytes", chunk->size);
+    debug("free, size=%x/%x, current=%x", chunk->size, malloc_deallocated(), ptr);
 
     // Check if the previous chunk can be merged with the
     // deallocated chunk. Current chunk is removed.
@@ -102,9 +118,8 @@ void free(void *ptr)
         {
             chunk->next_chunk->previous_chunk = chunk->previous_chunk;
         }
-
         chunk = chunk->previous_chunk;
-        debug("merged chunks to %d bytes", chunk->size);
+        debug("merge, mode=previous, size=%x/%x", chunk->size, malloc_deallocated());
     }
 
     // Check if the next chunk can be merged with the
@@ -116,8 +131,8 @@ void free(void *ptr)
 
         if (chunk->next_chunk != NULL)
         {
-            chunk->previous_chunk = chunk;
+            chunk->next_chunk->previous_chunk = chunk;
         }
-        debug("merged chunks to %d bytes", chunk->size);
+        debug("merge, mode=next, size=%x/%x", chunk->size, malloc_deallocated());
     }
 }
