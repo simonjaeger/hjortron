@@ -5,6 +5,7 @@
 
 // TODO: Move to driver specific metadata.
 // TODO: Support ATA_BUS_SECONDARY.
+
 static fat12_extended_bios_parameter_block *bpb;
 static size_t lba_fat1;
 static size_t lba_root;
@@ -22,7 +23,6 @@ bool fat12_strcmp(string str1, string str2, size_t len)
     }
     return true;
 }
-
 bool fat12_valid_cluster(uint16_t cluster)
 {
     // Check if cluster is within range of valid cluster values.
@@ -118,8 +118,8 @@ fs_file *fat12_open(string path)
     size_t entries_len = bpb->directory_entries;
     fat12_read_directory(&entries, &entries_len, 0);
 
-    char buffer[FAT12_FILENAME_LENGTH];
-    strset(buffer, '\0', FAT12_FILENAME_LENGTH);
+    char buffer[FAT12_FILENAME_LENGTH + 1];
+    strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
     size_t i = 0;
     size_t j = 0;
 
@@ -132,6 +132,39 @@ fs_file *fat12_open(string path)
                 debug("%s", "empty buffer");
                 return NULL;
             }
+
+            // Find extension.
+            char ext[3] = {0, 0, 0};
+            for (size_t k = 1; k < FAT12_FILENAME_LENGTH; k++)
+            {
+                if (ext[0])
+                {
+                    if (k >= 8)
+                    {
+                        buffer[k] = ext[k - 8];
+                        continue;
+                    }
+
+                    buffer[k] = ' ';
+                    continue;
+                }
+
+                if (buffer[k] == '.')
+                {
+                    ext[0] = buffer[k + 1];
+                    ext[1] = buffer[k + 2];
+                    ext[2] = buffer[k + 3];
+                    k--;
+                }
+            }
+
+            if (!ext[0])
+            {
+                debug("%s", "invalid path");
+                return NULL;
+            }
+
+            debug("%s", buffer);
 
             // Find file within directory.
             fat12_directory_entry *entry = NULL;
@@ -194,7 +227,7 @@ fs_file *fat12_open(string path)
             fat12_read_directory(&entries, &entries_len, cluster);
 
             // Clear buffer.
-            strset(buffer, '\0', FAT12_FILENAME_LENGTH);
+            strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
             i = 0;
             j++;
             continue;

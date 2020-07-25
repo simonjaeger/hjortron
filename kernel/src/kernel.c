@@ -87,39 +87,9 @@ void main(const boot_info *boot_info)
     serial_init(SERIAL_COM1);
     ata_init();
 
+    // TODO: Skip if there is no disk on primary ATA bus.
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
-
-    fs_file *file = fs_open("/H/DATA1      /DATA2      /LOREM   TXT");
-    // fs_file *file = fs_open("/H/KERNEL  BIN");
-
-    if (file == NULL)
-    {
-        printf("%s", "Cannot open file.\n");
-    }
-    else
-    {
-        printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
-
-        size_t buffer_size = 1024;
-        uint32_t *buffer = (uint32_t *)malloc(buffer_size + 1);
-
-        // fs_seek(file, 0x880);
-        while (file->offset < file->len)
-        // for (size_t i = 0; i < 5 * 8; i++)
-        {
-            strset((string)buffer, '\0', buffer_size + 1);
-            fs_read(file, buffer, buffer_size);
-            printf("%s", buffer);
-            // debug("%s", buffer);
-
-            // debug("%x %x", file->offset, file->len);
-        }
-
-        fs_close(file);
-
-        free(buffer);
-    }
 
     while (1)
         ;
