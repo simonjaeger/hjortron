@@ -29,9 +29,11 @@ typedef struct cpuid
     uint32_t features2;
 } __attribute__((packed)) cpuid;
 
+
 typedef struct boot_info
 {
     gdt *gdt;
+    uint16_t bpb;
     uint8_t drive;
     cpuid cpuid;
     memory_map memory_map;

@@ -76,6 +76,7 @@ start:
     call read_file
 
     ; Jump to INIT.BIN.
+    push boot
     push boot_drive
     jmp INIT_SEGMENT
 
@@ -273,11 +274,11 @@ read_file:
     jz .low
 
 .high:
-    ; Take low bits bits.
+    ; Take high 12 bits.
     shr dx, 4
     jmp .next 
 .low:
-    ; Take high 12 bits.
+    ; Take low 12 bits.
     and dx, 0xFFF
 
 .next:

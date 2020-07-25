@@ -154,19 +154,11 @@ void pci_init()
                 devices[device_count] = device;
                 device_count++;
 
-                debug("detected device, vendor_id=%x, device_id=%x, command=%x, status=%x, class_code=%x, subclass=%x, prog_if=%x, revision_id=%x, bist=%x, header_type=%x, latency_timer=%x, cache_line_size=%x",
+                debug("detected device, vendor_id=%x, device_id=%x, class_code=%x, subclass=%x",
                       device->vendor_id,
                       device->device_id,
-                      device->command,
-                      device->status,
                       device->class_code,
-                      device->subclass,
-                      device->prog_if,
-                      device->revision_id,
-                      device->bist,
-                      device->header_type,
-                      device->latency_timer,
-                      device->cache_line_size);
+                      device->subclass);
             }
         }
     }
