@@ -10,10 +10,12 @@
 #define dputc(c) serial_putc(SERIAL_COM1, c)
 #define dputs(s) serial_puts(SERIAL_COM1, s)
 
+#define BUFFER_LENGTH 1024
+
 void debug_printf(string file, __attribute__((unused)) const char *function, size_t line, string format, ...)
 {
-    char buffer[256];
-    strset(buffer, '\0', 256);
+    char buffer[1024];
+    strset(buffer, '\0', 1024);
 
     // Print prefix.
     sprintf(buffer, "(%s:%d): ", file, line);

@@ -65,8 +65,9 @@ void mmap_info(const memory_map *memory_map)
 
 void main(const boot_info *boot_info)
 {
+    display_init();
+
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
-    enable_cursor();
 
     disk_info(boot_info);
     cpuid_info(&boot_info->cpuid);
@@ -100,19 +101,21 @@ void main(const boot_info *boot_info)
     {
         printf("Opened file: \"%s\", %d bytes, %d ref \n", file->name, file->len, file->ref);
 
-        size_t buffer_size = 2048;
+        size_t buffer_size = 512;
         uint32_t *buffer = (uint32_t *)malloc(buffer_size + 1);
 
         // fs_seek(file, 0x880);
-        while (file->offset < file->len)
-        // for (size_t i = 0; i < 4; i++)
+        // while (file->offset < file->len)
+        for (size_t i = 0; i < 5 * 8; i++)
         {
             strset((string)buffer, '\0', buffer_size + 1);
             fs_read(file, buffer, buffer_size);
             printf("%s", buffer);
-            // debug("%s", buffer);
-            // debug("%x %x", file->offset, file->len);
+            debug("%s", buffer);
+
+            debug("%x %x", file->offset, file->len);
         }
+
 
         free(buffer);
     }
