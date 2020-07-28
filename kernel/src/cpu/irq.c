@@ -6,6 +6,18 @@
 static idt_entry entries[IDT_SIZE] = {0};
 static void (*handlers[IDT_SIZE])() = {0};
 
+extern void irq0x00();
+extern void irq0x01();
+extern void irq0x02();
+extern void irq0x03();
+extern void irq0x04();
+extern void irq0x05();
+extern void irq0x06();
+extern void irq0x07();
+extern void irq0x08();
+
+extern void irq0x0D();
+
 extern void irq0x20();
 extern void irq0x21();
 extern void irq0x22();
@@ -43,6 +55,18 @@ void irq_init()
     {
         init_idt_entry(&entries[i], segment, irq_ignore, 0, IDT_GATE_TYPE_INTERRUPT_32);
     }
+
+    init_idt_entry(&entries[0x00], segment, irq0x00, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x01], segment, irq0x01, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x02], segment, irq0x02, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x03], segment, irq0x03, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x04], segment, irq0x04, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x05], segment, irq0x05, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x06], segment, irq0x06, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x07], segment, irq0x07, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x08], segment, irq0x08, 0, IDT_GATE_TYPE_INTERRUPT_32);
+
+    init_idt_entry(&entries[0x0D], segment, irq0x0D, 0, IDT_GATE_TYPE_INTERRUPT_32);
 
     init_idt_entry(&entries[0x20], segment, irq0x20, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x21], segment, irq0x21, 0, IDT_GATE_TYPE_INTERRUPT_32);
@@ -89,12 +113,12 @@ void irq_init_handler(uint8_t irq, void *(handler))
 {
     handlers[irq] = handler;
 
-    debug("initialized handler: irq=%x handler=%lx", irq, (uint32_t)handler);
+    debug("initialized handler, irq=%x, handler=%lx", irq, (uint32_t)handler);
 }
 
 void irq_terminate_handler(uint8_t irq)
 {
     handlers[irq] = NULL;
 
-    debug("terminated handler: irq=%x", irq);
+    debug("terminated handler, irq=%x", irq);
 }
