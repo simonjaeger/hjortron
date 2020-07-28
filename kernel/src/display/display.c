@@ -1,6 +1,7 @@
 #include "display/display.h"
 #include "display/colors.h"
 #include "cpu/io.h"
+#include "stdarg.h"
 
 #define DISPLAY_MEMORY 0xB8000
 #define DISPLAY_WIDTH 80
@@ -138,8 +139,8 @@ void put_hex(size_t count)
 void printf(const string str, ...)
 {
     // Get variable list.
-    __builtin_va_list ap;
-    __builtin_va_start(ap, str);
+    va_list ap;
+    va_start(ap, str);
 
     // Create default attribute.
     text_attribute attribute = {DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
@@ -229,5 +230,5 @@ void printf(const string str, ...)
         putcf(str[i], attribute);
     }
 
-    __builtin_va_end(ap);
+    va_end(ap);
 }

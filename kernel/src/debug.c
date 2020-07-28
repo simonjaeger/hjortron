@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "stdarg.h"
 #include "display/display.h"
 #include "device/serial.h"
 
@@ -22,10 +23,10 @@ void debug_printf(string file, __attribute__((unused)) const char *function, siz
     dputs(buffer);
 
     // Format string.
-    __builtin_va_list ap;
-    __builtin_va_start(ap, format);
+    va_list ap;
+    va_start(ap, format);
     sprintf_va(buffer, format, ap);
-    __builtin_va_end(ap);
+    va_end(ap);
 
     // Print string.
     dputs(buffer);

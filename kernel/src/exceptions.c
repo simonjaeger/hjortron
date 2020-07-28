@@ -3,110 +3,110 @@
 #include "string.h"
 #include "debug.h"
 
-void exception_kernel_halt(string reason)
+void exceptions_kernel_halt(string reason)
 {
     debug("kernel halt, reason=%s", reason);
     asm("hlt");
 }
 
-void exception_handle_divide_by_zero_error()
+void exceptions_handle_divide_by_zero_error()
 {
-    exception_kernel_halt("divide-by-zero error");
+    exceptions_kernel_halt("divide-by-zero error");
 }
 
-void exception_handle_bound_range_exceeded()
+void exceptions_handle_bound_range_exceeded()
 {
-    exception_kernel_halt("bound range exceeded");
+    exceptions_kernel_halt("bound range exceeded");
 }
 
-void exception_handle_invalid_opcode()
+void exceptions_handle_invalid_opcode()
 {
-    exception_kernel_halt("invalid opcode");
+    exceptions_kernel_halt("invalid opcode");
 }
 
-void exception_handle_device_not_available()
+void exceptions_handle_device_not_available()
 {
-    exception_kernel_halt("device not available");
+    exceptions_kernel_halt("device not available");
 }
 
-void exception_handle_double_fault()
+void exceptions_handle_double_fault()
 {
-    exception_kernel_halt("double fault");
+    exceptions_kernel_halt("double fault");
 }
 
-void exception_handle_invalid_tss()
+void exceptions_handle_invalid_tss()
 {
-    exception_kernel_halt("invalid TSS");
+    exceptions_kernel_halt("invalid TSS");
 }
 
-void exception_handle_segment_not_present()
+void exceptions_handle_segment_not_present()
 {
-    exception_kernel_halt("segment not present");
+    exceptions_kernel_halt("segment not present");
 }
 
-void exception_handle_stack_segment_fault()
+void exceptions_handle_stack_segment_fault()
 {
-    exception_kernel_halt("stack-segment fault");
+    exceptions_kernel_halt("stack-segment fault");
 }
 
-void exception_handle_general_protection_fault()
+void exceptions_handle_general_protection_fault()
 {
-    exception_kernel_halt("general protection fault");
+    exceptions_kernel_halt("general protection fault");
 }
 
-void exception_handle_page_fault()
+void exceptions_handle_page_fault()
 {
-    exception_kernel_halt("page fault");
+    exceptions_kernel_halt("page fault");
 }
 
-void exception_handle_x87_floating_point_exception()
+void exceptions_handle_x87_floating_point_exception()
 {
-    exception_kernel_halt("x87 floating-point exception");
+    exceptions_kernel_halt("x87 floating-point exception");
 }
 
-void exception_handle_alignment_check()
+void exceptions_handle_alignment_check()
 {
-    exception_kernel_halt("alignment check");
+    exceptions_kernel_halt("alignment check");
 }
 
-void exception_handle_machine_check()
+void exceptions_handle_machine_check()
 {
-    exception_kernel_halt("machine check");
+    exceptions_kernel_halt("machine check");
 }
 
-void exception_handle_simd_floating_point_exception()
+void exceptions_handle_simd_floating_point_exception()
 {
-    exception_kernel_halt("SIMD floating-point exception");
+    exceptions_kernel_halt("SIMD floating-point exception");
 }
 
-void exception_handle_virtualization_exception()
+void exceptions_handle_virtualization_exception()
 {
-    exception_kernel_halt("virtualization exception");
+    exceptions_kernel_halt("virtualization exception");
 }
 
-void exception_handle_security_exception()
+void exceptions_handle_security_exception()
 {
-    exception_kernel_halt("security exception");
+    exceptions_kernel_halt("security exception");
 }
 
 void exceptions_init()
 {
-    irq_init_handler(0x00, exception_handle_divide_by_zero_error);
-    irq_init_handler(0x05, exception_handle_bound_range_exceeded);
-    irq_init_handler(0x06, exception_handle_invalid_opcode);
-    irq_init_handler(0x07, exception_handle_device_not_available);
-    irq_init_handler(0x08, exception_handle_double_fault);
-    irq_init_handler(0x0A, exception_handle_invalid_tss);
-    irq_init_handler(0x0B, exception_handle_segment_not_present);
-    irq_init_handler(0x0C, exception_handle_stack_segment_fault);
-    irq_init_handler(0x0D, exception_handle_general_protection_fault);
-    irq_init_handler(0x0E, exception_handle_page_fault);
-    irq_init_handler(0x10, exception_handle_x87_floating_point_exception);
-    irq_init_handler(0x11, exception_handle_alignment_check);
-    irq_init_handler(0x12, exception_handle_machine_check);
-    irq_init_handler(0x13, exception_handle_simd_floating_point_exception);
-    irq_init_handler(0x14, exception_handle_virtualization_exception);
-    irq_init_handler(0x1E, exception_handle_security_exception);
+    irq_init_handler(0x00, exceptions_handle_divide_by_zero_error);
+    irq_init_handler(0x05, exceptions_handle_bound_range_exceeded);
+    irq_init_handler(0x06, exceptions_handle_invalid_opcode);
+    irq_init_handler(0x07, exceptions_handle_device_not_available);
+    irq_init_handler(0x08, exceptions_handle_double_fault);
+    irq_init_handler(0x0A, exceptions_handle_invalid_tss);
+    irq_init_handler(0x0B, exceptions_handle_segment_not_present);
+    irq_init_handler(0x0C, exceptions_handle_stack_segment_fault);
+    irq_init_handler(0x0D, exceptions_handle_general_protection_fault);
+    irq_init_handler(0x0E, exceptions_handle_page_fault);
+    irq_init_handler(0x10, exceptions_handle_x87_floating_point_exception);
+    irq_init_handler(0x11, exceptions_handle_alignment_check);
+    irq_init_handler(0x12, exceptions_handle_machine_check);
+    irq_init_handler(0x13, exceptions_handle_simd_floating_point_exception);
+    irq_init_handler(0x14, exceptions_handle_virtualization_exception);
+    irq_init_handler(0x1E, exceptions_handle_security_exception);
 
     debug("%s", "initialized exceptions");
 }
