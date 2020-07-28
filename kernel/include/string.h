@@ -2,6 +2,7 @@
 #define STRING_H_
 
 #include "types.h"
+#include "stdarg.h"
 
 typedef char *string;
 
@@ -17,7 +18,7 @@ string reverse(string str, size_t i, size_t j);
 string itoa(int32_t i, string str, size_t base);
 
 void sprintf(string str, string format, ...);
-void sprintf_va(string str, string format, __builtin_va_list ap);
+void sprintf_va(string str, string format, va_list ap);
 
 void memcpy(void *dest, void *src, size_t len);
 

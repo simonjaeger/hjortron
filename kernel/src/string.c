@@ -1,4 +1,5 @@
 #include "string.h"
+#include "stdarg.h"
 
 size_t strlen(const string str)
 {
@@ -122,13 +123,13 @@ string itoa(int32_t i, string str, size_t base)
 
 void sprintf(string str, string format, ...)
 {
-    __builtin_va_list ap;
-    __builtin_va_start(ap, format);
+    va_list ap;
+    va_start(ap, format);
     sprintf_va(str, format, ap);
-    __builtin_va_end(ap);
+    va_end(ap);
 }
 
-void sprintf_va(string str, string format, __builtin_va_list ap)
+void sprintf_va(string str, string format, va_list ap)
 {
     size_t j = 0;
     size_t len = strlen(format);
