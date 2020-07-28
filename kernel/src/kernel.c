@@ -14,6 +14,7 @@
 #include "device/serial.h"
 #include "device/ata.h"
 #include "debug.h"
+#include "exceptions.h"
 
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
@@ -63,9 +64,12 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
+extern void kfail();
+
 void main(const boot_info *boot_info)
 {
     display_init();
+    exceptions_init();
 
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
 
