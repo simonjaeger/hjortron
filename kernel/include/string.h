@@ -22,5 +22,6 @@ void sprintf(string str, string format, ...);
 void sprintf_va(string str, string format, va_list ap);
 
 void memcpy(void *dest, void *src, size_t len);
+void *memset(void *s, int c, size_t len);
 
 #endif // STRING_H_

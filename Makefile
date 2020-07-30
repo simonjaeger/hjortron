@@ -1,4 +1,4 @@
-all: boot kernel
+all: boot kernel apps
 
 fdd: boot kernel apps
 	mkdir -p bin

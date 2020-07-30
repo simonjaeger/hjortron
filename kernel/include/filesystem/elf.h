@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "filesystem/fs.h"
 
 #define EI_MAG0 0x0
 #define EI_MAG1 0x1
@@ -43,7 +44,34 @@ typedef struct elf_header
     uint16_t e_shstrndx;
 } elf_header;
 
+typedef struct elf_program_header
+{
+    uint32_t ph_type;
+    uint32_t ph_offset;
+    uint32_t ph_vaddr;
+    uint32_t ph_paddr;
+    uint32_t ph_filesz;
+    uint32_t ph_memsz;
+    uint32_t ph_flags;
+    uint32_t ph_align;
+} elf_program_header;
+
+typedef struct elf_section_header
+{
+    uint32_t sh_name;
+    uint32_t sh_type;
+    uint32_t sh_flags;
+    uint32_t sh_addr;
+    uint32_t sh_offset;
+    uint32_t sh_size;
+    uint32_t sh_link;
+    uint32_t sh_info;
+    uint32_t sh_addralign;
+    uint32_t sh_entsize;
+} elf_section_header;
+
 bool elf_check_file(const elf_header *header);
 bool elf_check_support(const elf_header *header);
+void *elf_read(fs_file *file);
 
 #endif // FILESYSTEM_ELF_H_

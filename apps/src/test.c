@@ -2,10 +2,11 @@
 #include "string.h"
 #include "display/display.h"
 
-static const uint32_t data = 0x1234;
+static const uint32_t data1;
+static const uint32_t data2 = 0x1234;
 
 int main()
 {
-    printf("Hello! %x", data);
+    printf("Hello! %3 %x", data1, data2);
     return 0;
 }
