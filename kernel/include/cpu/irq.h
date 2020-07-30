@@ -1,7 +1,7 @@
 #ifndef CPU_IRQ_H_
 #define CPU_IRQ_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "cpu/idt.h"
 
 void irq_init();

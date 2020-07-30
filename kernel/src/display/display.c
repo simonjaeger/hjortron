@@ -1,7 +1,7 @@
+#include <stdarg.h>
 #include "display/display.h"
 #include "display/colors.h"
 #include "cpu/io.h"
-#include "stdarg.h"
 
 #define DISPLAY_MEMORY 0xB8000
 #define DISPLAY_WIDTH 80

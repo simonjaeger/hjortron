@@ -1,8 +1,9 @@
 #ifndef STRING_H_
 #define STRING_H_
 
-#include "types.h"
-#include "stdarg.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
 
 typedef char *string;
 

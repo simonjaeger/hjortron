@@ -1,7 +1,7 @@
 #ifndef DISPLAY_DISPLAY_H_
 #define DISPLAY_DISPLAY_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 
 typedef struct text_attribute

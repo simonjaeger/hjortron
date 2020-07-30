@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "filesystem/fat12.h"
 #include "device/ata.h"
 #include "memory/malloc.h"

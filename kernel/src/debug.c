@@ -1,5 +1,5 @@
+#include <stdarg.h>
 #include "debug.h"
-#include "stdarg.h"
 #include "display/display.h"
 #include "device/serial.h"
 

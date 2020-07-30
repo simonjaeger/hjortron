@@ -1,7 +1,7 @@
 #ifndef ATA_H_
 #define ATA_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 
 typedef struct ata_identify_device_data

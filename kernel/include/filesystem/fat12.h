@@ -1,8 +1,7 @@
 #ifndef FILESYSTEM_FAT12_H_
 #define FILESYSTEM_FAT12_H_
 
-#include "types.h"
-#include "boot.h"
+#include <stdint.h>
 #include "filesystem/fs.h"
 
 typedef struct fat12_extended_bios_parameter_block

@@ -1,7 +1,7 @@
 #ifndef CPU_IDT_H_
 #define CPU_IDT_H_
 
-#include "types.h"
+#include <stdint.h>
 
 #define IDT_SIZE 0xFF
 
