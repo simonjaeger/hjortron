@@ -16,6 +16,7 @@
 #include "exceptions.h"
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
+#include "filesystem/elf.h"
 
 void disk_info(const boot_info *boot_info)
 {
@@ -100,7 +101,11 @@ void main(const boot_info *boot_info)
     }
     else
     {
-        printf("Opened TEST.ELF. %d", file->len);
+        printf("Opened TEST.ELF. %d %d", file->len, sizeof(elf_header));
+        elf_header *header = (elf_header *)malloc(sizeof(elf_header));
+        fs_read(file, (uint32_t *)header, sizeof(elf_header));
+
+        debug("%d %d", elf_check_file(header), elf_check_support(header));
     }
 
     while (1)
