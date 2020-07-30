@@ -23,7 +23,7 @@ bool elf_check_support(const elf_header *header)
            header->e_type == ET_EXEC;
 }
 
-void * elf_read(fs_file *file)
+void *elf_read(fs_file *file)
 {
     // Read file.
     uint8_t *file_buffer = (uint8_t *)malloc(file->len);
@@ -39,24 +39,40 @@ void * elf_read(fs_file *file)
     }
 
     elf_program_header *program_headers = (elf_program_header *)(&file_buffer[header->e_phoff]);
-    __attribute__((unused)) elf_section_header *section_headers = (elf_section_header *)(&file_buffer[header->e_shoff]);
+    elf_section_header *section_headers = (elf_section_header *)(&file_buffer[header->e_shoff]);
 
     // Compute length of memory buffer.
     size_t len = 0;
     for (size_t i = 0; i < header->e_phnum; i++)
     {
+        if (program_headers[i].ph_type == PHT_LOAD)
+        {
+            continue;
+        }
         len += program_headers[i].ph_memsz;
     }
 
+    // Allocate and zero buffer.
     uint8_t *mem_buffer = (uint8_t *)malloc(len);
     memset(mem_buffer, 0, len);
 
-    for (size_t i = 0; i < header->e_phnum; i++)
+    for (size_t i = 0; i < header->e_shnum; i++)
     {
+        if (!(section_headers[i].sh_flags & SHF_ALLOC))
+        {
+            continue;
+        }
 
+        // Skip sections like .bss.
+        if (section_headers[i].sh_type != SHT_PROGBITS)
+        {
+            continue;
+        }
+
+        memcpy(&mem_buffer[section_headers[i].sh_addr], &file_buffer[section_headers[i].sh_offset], section_headers[i].sh_size);
+
+        // TODO: Relocation (symbols).
     }
-    
-
 
     free(file_buffer);
     return mem_buffer;

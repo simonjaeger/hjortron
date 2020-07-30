@@ -8,5 +8,5 @@ static const uint32_t data2 = 0x1234;
 int main()
 {
     printf("Hello! %3 %x", data1, data2);
-    return 0;
+    return data2;
 }

@@ -101,8 +101,15 @@ void main(const boot_info *boot_info)
     }
     else
     {
-        printf("Opened TEST.ELF. %d %d", file->len, sizeof(elf_header));
-        elf_read(file);
+        printf("Opened TEST.ELF.\n");
+        void* ptr = elf_read(file);
+        fs_close(file);
+
+        typedef int func(void);
+        func* f = (func*)ptr;
+        
+        printf("Test. %x", f());
+        
     }
 
     while (1)
