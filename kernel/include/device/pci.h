@@ -1,7 +1,7 @@
 #ifndef PCI_H_
 #define PCI_H_
 
-#include "types.h"
+#include <stdint.h>
 
 #define PCI_GENERAL_DEVICE 0x00
 #define PCI_BRIDGE_DEVICE 0x01

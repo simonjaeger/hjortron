@@ -1,8 +1,7 @@
 #ifndef FILESYSTEM_FS_H
 #define FILESYSTEM_FS_H
 
-#include "boot.h"
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 
 #define FILE_NAME_LENGTH 256

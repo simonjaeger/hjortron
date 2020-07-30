@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "device/pci.h"
 #include "cpu/io.h"
 #include "memory/malloc.h"

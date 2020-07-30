@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "memory/malloc.h"
 #include "debug.h"
 

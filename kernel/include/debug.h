@@ -1,7 +1,7 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 
 void debug_printf(string file, const char* function,  size_t line, string format, ...);

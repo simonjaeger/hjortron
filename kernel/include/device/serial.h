@@ -1,7 +1,7 @@
 #ifndef SERIAL_H_
 #define SERIAL_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 #include "cpu/io.h"
 

@@ -1,21 +1,18 @@
+#include <stdint.h>
+#include <stddef.h>
 #include "kernel.h"
-#include "types.h"
 #include "string.h"
-
 #include "memory/malloc.h"
-
 #include "display/display.h"
 #include "display/colors.h"
 #include "cpu/irq.h"
 #include "cpu/pic.h"
-
 #include "drivers/keyboard.h"
 #include "device/pci.h"
 #include "device/serial.h"
 #include "device/ata.h"
 #include "debug.h"
 #include "exceptions.h"
-
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
 

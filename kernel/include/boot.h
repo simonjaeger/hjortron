@@ -1,7 +1,7 @@
 #ifndef BOOT_H_
 #define BOOT_H_
 
-#include "types.h"
+#include <stdint.h>
 #include "string.h"
 #include "cpu/gdt.h"
 

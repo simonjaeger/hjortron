@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "drivers/keyboard.h"
 #include "cpu/io.h"
 #include "cpu/irq.h"
