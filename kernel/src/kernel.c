@@ -102,14 +102,34 @@ void main(const boot_info *boot_info)
     else
     {
         printf("Opened TEST.ELF.\n");
-        void* ptr = elf_read(file);
+        void *ptr = elf_read(file);
+
+        // printf("%x\n", *((uint32_t *)ptr));
+
+        typedef uint32_t func(void);
+        func *f = (func *)ptr;
+
+        for (size_t i = 0; i < 2000; i++)
+        {
+            debug("%s", "wait");
+        }
+
+        // for (size_t i = 0; i < file->len; i++)
+        // {
+        //     uint8_t d = ((uint8_t*)ptr)[i];
+        //     debug("%x ", d);
+        // }
+
         fs_close(file);
 
-        typedef int func(void);
-        func* f = (func*)ptr;
-        
-        printf("Test. %x", f());
-        
+        uint32_t result = f();
+
+        for (size_t i = 0; i < 2000; i++)
+        {
+            debug("%s", "wait");
+        }
+
+        printf("Kernel resumed: %x", result);
     }
 
     while (1)

@@ -14,7 +14,7 @@ all: bin/test.elf
 
 bin/test.elf: $(OBJ)
 	mkdir -p $(BIN_FOLDER)
-	$(LD) $(OBJ) -T linker.ld -o $@
+	$(LD) $(OBJ) -T linker.ld -r -o $@
 
 $(OBJ_FOLDER)/%.o: $(SRC_FOLDER)/%.c
 	mkdir -p $(@D)

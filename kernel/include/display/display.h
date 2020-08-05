@@ -20,4 +20,6 @@ void puts(string str);
 // TODO: Share implementation with sprintf? How to deal with the buffer...?
 void printf(const string str, ...);
 
+uint32_t display_test();
+
 #endif // DISPLAY_DISPLAY_H_

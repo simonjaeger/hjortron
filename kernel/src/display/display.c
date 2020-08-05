@@ -21,12 +21,10 @@ typedef struct text_data
 } __attribute__((packed)) text_data;
 
 static text_data *buffer = (text_data *)DISPLAY_MEMORY;
-static size_t cursor;
+static size_t cursor = 0;
 
 void display_init()
 {
-    cursor = 0;
-
     outb(0x3D4, 0x0A);
     outb(0x3D5, (inb(0x3D5) & 0xC0) | CURSOR_SCANLINE_START);
     outb(0x3D4, 0x0B);
@@ -231,4 +229,10 @@ void printf(const string str, ...)
     }
 
     va_end(ap);
+}
+
+uint32_t display_test()
+{
+    // return 0x1234;
+    return (uint32_t)buffer;
 }

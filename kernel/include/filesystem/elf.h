@@ -26,7 +26,7 @@
 #define ET_LOPROC 0xFF00
 #define ET_HIPROC 0xFFFF
 
-#define SHT_NULL 0x0	
+#define SHT_NULL 0x0
 #define SHT_PROGBITS 0x1
 #define SHT_SYMTAB 0x2
 #define SHT_STRTAB 0x3
@@ -43,7 +43,7 @@
 #define SHT_PREINIT_ARRAY 0x10
 #define SHT_GROUP 0x11
 #define SHT_SYMTAB_SHNDX 0x12
-#define SHT_NUM	 0x13
+#define SHT_NUM 0x13
 #define SHT_LOOS 0x60000000
 
 #define SHF_WRITE 0x1
@@ -61,7 +61,6 @@
 #define SHF_ORDERED 0x4000000
 #define SHF_EXCLUDE 0x8000000
 
-
 #define PHT_NULL 0x0
 #define PHT_LOAD 0x1
 #define PHT_DYNAMIC 0x2
@@ -74,6 +73,20 @@
 #define PHT_HIOS 0x6FFFFFFF
 #define PHT_LOPROC 0x70000000
 #define PHT_HIPROC 0x7FFFFFFF
+
+#define RELT_386_NONE 0x0
+#define RELT_386_32 0x1
+#define RELT_386_PC32 0x2
+
+#define SHN_UNDEF 0x0
+#define SHN_LORESERVE 0xFF00
+#define SHN_LOPROC 0xFF00
+#define SHN_BEFORE 0xFF00
+#define SHN_AFTER 0xFF01
+#define SHN_HIPROC 0xFF1F
+#define SHN_ABS 0xFFF1
+#define SHN_COMMON 0xFFF2
+#define SHN_HIRESERVE 0xFFFF
 
 typedef struct elf_header
 {
@@ -118,6 +131,22 @@ typedef struct elf_section_header
     uint32_t sh_addralign;
     uint32_t sh_entsize;
 } elf_section_header;
+
+typedef struct elf_rel
+{
+    uint32_t offset;
+    uint32_t info;
+} elf_rel;
+
+typedef struct elf_sym
+{
+    uint32_t name;
+    uint32_t value;
+    uint32_t size;
+    uint8_t info;
+    uint8_t other;
+    uint16_t shndx;
+} elf_sym;
 
 bool elf_check_file(const elf_header *header);
 bool elf_check_support(const elf_header *header);
