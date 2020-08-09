@@ -230,9 +230,3 @@ void printf(const string str, ...)
 
     va_end(ap);
 }
-
-uint32_t display_test()
-{
-    // return 0x1234;
-    return (uint32_t)buffer;
-}
