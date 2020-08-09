@@ -2,10 +2,13 @@
 #include "cpu/irq.h"
 #include "string.h"
 #include "debug.h"
+#include "display/colors.h"
+#include "display/display.h"
 
 void exceptions_kernel_halt(string reason)
 {
-    debug("kernel halt, reason=%s", reason);
+    printf("%fhalt, reason=%s", (text_attribute){COLOR_RED, COLOR_WHITE}, reason);
+    debug("halt, reason=%s", reason);
     asm("hlt");
 }
 

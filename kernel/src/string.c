@@ -249,3 +249,13 @@ void memcpy(void *dest, void *src, size_t len)
         dest2[i] = src2[i];
     }
 }
+
+void *memset(void *s, int c, size_t len)
+{
+    unsigned char *p = s;
+    while (len--)
+    {
+        *p++ = (unsigned char)c;
+    }
+    return s;
+}

@@ -17,6 +17,7 @@ sudo mount /dev/loop0 /mnt -t msdos -o "fat=12"
 # Copy files.
 sudo cp boot/bin/init.bin /mnt
 sudo cp kernel/bin/kernel.bin /mnt
+sudo cp apps/bin/test.elf /mnt
 sudo mkdir /mnt/data1
 sudo mkdir /mnt/data1/data2
 sudo echo "test1" > /mnt/data1/test1.txt

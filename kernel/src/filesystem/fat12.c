@@ -165,8 +165,6 @@ fs_file *fat12_open(string path)
                 return NULL;
             }
 
-            debug("%s", buffer);
-
             // Find file within directory.
             fat12_directory_entry *entry = NULL;
             for (size_t i = 0; i < entries_len; i++)

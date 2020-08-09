@@ -12,9 +12,11 @@
 #include "device/serial.h"
 #include "device/ata.h"
 #include "debug.h"
+#include "boot.h"
 #include "exceptions.h"
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
+#include "filesystem/elf.h"
 
 void disk_info(const boot_info *boot_info)
 {
@@ -61,8 +63,6 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
-extern void kfail();
-
 void main(const boot_info *boot_info)
 {
     display_init();
@@ -91,6 +91,26 @@ void main(const boot_info *boot_info)
     // TODO: Skip if there is no disk on primary ATA bus.
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
+
+    // fs_file *file = fs_open("/H/TEST.ELF");
+    // if (file == NULL)
+    // {
+    //     printf("Could not open TEST.ELF.");
+    // }
+    // else
+    // {
+    //     // Read file.
+    //     void *elf_buffer;
+    //     uint32_t elf_entry;
+    //     elf_read(file, &elf_buffer, &elf_entry);
+    //     uint32_t (*elf_main)(void) = (uint32_t (*)(void)) ((uint32_t)elf_buffer + elf_entry);
+
+    //     // Close file.
+    //     fs_close(file);
+
+    //     // Run file.
+    //     elf_main();
+    // }
 
     while (1)
         ;
