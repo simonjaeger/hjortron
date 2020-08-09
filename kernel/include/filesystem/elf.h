@@ -134,22 +134,22 @@ typedef struct elf_section_header
 
 typedef struct elf_rel
 {
-    uint32_t offset;
-    uint32_t info;
+    uint32_t r_offset;
+    uint32_t r_info;
 } elf_rel;
 
 typedef struct elf_sym
 {
-    uint32_t name;
-    uint32_t value;
-    uint32_t size;
-    uint8_t info;
-    uint8_t other;
-    uint16_t shndx;
+    uint32_t st_name;
+    uint32_t st_value;
+    uint32_t st_size;
+    uint8_t st_info;
+    uint8_t st_other;
+    uint16_t st_shndx;
 } elf_sym;
 
 bool elf_check_file(const elf_header *header);
 bool elf_check_support(const elf_header *header);
-void *elf_read(fs_file *file);
+void elf_read(fs_file *file, void **buffer, uint32_t *entry);
 
 #endif // FILESYSTEM_ELF_H_

@@ -23,125 +23,146 @@ bool elf_check_support(const elf_header *header)
            header->e_type == ET_REL;
 }
 
-void *elf_read(fs_file *file)
+elf_program_header *elf_find_ph(const elf_header *header, const size_t idx)
+{
+    return (elf_program_header *)((uint32_t)header + header->e_phoff + sizeof(elf_program_header) * idx);
+}
+
+elf_section_header *elf_find_sh(const elf_header *header, const size_t idx)
+{
+    return (elf_section_header *)((uint32_t)header + header->e_shoff + sizeof(elf_section_header) * idx);
+}
+
+elf_sym *elf_find_sym(const elf_header *header, size_t sh_idx, size_t sym_idx)
+{
+    elf_section_header *sh = elf_find_sh(header, sh_idx);
+    elf_sym *sym = (elf_sym *)((uint32_t)header + sh->sh_offset + sym_idx * sizeof(elf_sym));
+
+    if (sym->st_shndx == SHN_UNDEF)
+    {
+        return NULL;
+    }
+    return sym;
+}
+
+bool elf_rel_sym(uint8_t type, uint32_t *target, uint32_t value)
+{
+    switch (type)
+    {
+    case RELT_386_NONE:
+        break;
+    case RELT_386_32:
+        *target += value;
+        break;
+    case RELT_386_PC32:
+        *target += value - (uint32_t)target;
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+
+void elf_read(fs_file *file, void **buffer, uint32_t *entry)
 {
     // Read file.
     uint8_t *file_buffer = (uint8_t *)malloc(file->len);
     fs_read(file, (uint32_t *)file_buffer, file->len);
 
     // Check file and support.
-    elf_header *header = (elf_header *)file_buffer;
+    const elf_header *header = (elf_header *)file_buffer;
     if (!elf_check_file(header) || !elf_check_support(header))
     {
         debug("%s", "cannot read file");
         free(file_buffer);
-        return NULL;
+        return;
     }
 
-    elf_program_header *program_headers = (elf_program_header *)(&file_buffer[header->e_phoff]);
-    elf_section_header *section_headers = (elf_section_header *)(&file_buffer[header->e_shoff]);
-
-    // Compute length of memory buffer.
+    // Compute length of buffer.
     size_t len = 0;
     for (size_t i = 0; i < header->e_phnum; i++)
     {
-        if (program_headers[i].ph_type == PHT_LOAD)
+        const elf_program_header *ph = elf_find_ph(header, i);
+        if (ph->ph_type == PHT_LOAD)
         {
             continue;
         }
-        len += program_headers[i].ph_memsz;
+        len += ph->ph_memsz;
     }
 
-    // Allocate and zero buffer.
-    uint8_t *mem_buffer = (uint8_t *)malloc(len);
-    memset(mem_buffer, 0, len);
+    uint8_t *reloc_buffer = (uint8_t *)malloc(len);
+    memset(reloc_buffer, 0, len);
 
+    // Copy PROGBITS to buffer.
     for (size_t i = 0; i < header->e_shnum; i++)
     {
-        if (!(section_headers[i].sh_flags & SHF_ALLOC))
+        const elf_section_header *sh = elf_find_sh(header, i);
+        if (!(sh->sh_flags & SHF_ALLOC))
         {
             continue;
         }
 
         // Skip sections like .bss.
-        if (section_headers[i].sh_type != SHT_PROGBITS)
+        if (sh->sh_type != SHT_PROGBITS)
         {
             continue;
         }
 
-        memcpy(&mem_buffer[section_headers[i].sh_addr], &file_buffer[section_headers[i].sh_offset], section_headers[i].sh_size);
+        memcpy(&reloc_buffer[sh->sh_addr], &file_buffer[sh->sh_offset], sh->sh_size);
     }
 
+    // Go through each symbol to relocate.
     for (size_t i = 0; i < header->e_shnum; i++)
     {
-        if (section_headers[i].sh_type != SHT_REL)
+        const elf_section_header *sh = elf_find_sh(header, i);
+        const elf_section_header *info_sh = elf_find_sh(header, sh->sh_info);
+
+        if (sh->sh_type != SHT_REL)
         {
             continue;
         }
 
-        // Go through each symbol to relocate.
-        elf_rel *rels = (elf_rel *)&file_buffer[section_headers[i].sh_offset];
-        elf_section_header *sym_section_header = &section_headers[section_headers[i].sh_link];
-        elf_section_header *target_section_header = &section_headers[section_headers[i].sh_info];
-
-        for (size_t j = 0; j < section_headers[i].sh_size / section_headers[i].sh_entsize; j++)
+        const elf_rel *rels = (elf_rel *)&file_buffer[sh->sh_offset];
+        for (size_t j = 0; j < sh->sh_size / sh->sh_entsize; j++)
         {
-            uint8_t type = rels[j].info;
-            uint32_t sym_offset = rels[j].info >> 8;
-            if (!type || !sym_offset)
+            const uint8_t type = rels[j].r_info;
+            const uint32_t offset = rels[j].r_info >> 8;
+            if (!type || !offset)
             {
                 continue;
             }
 
-            // TODO: Check if symbol index is within range.
-
-            __attribute__((unused)) elf_sym *sym = &((elf_sym *)&file_buffer[sym_section_header->sh_offset])[sym_offset];
-
-            debug("%d %x %x %x", j, rels[j].offset, rels[j].info, sym->value);
-
-            __attribute__((unused)) uint32_t *ref = (uint32_t *)&mem_buffer[target_section_header->sh_addr + rels[j].offset];
-
-            // debug("%d %d %x %x", ((uint32_t)type), ((uint32_t)sym), sym->value, ref);
-            __attribute__((unused)) uint32_t symval = 0;
-
-            if (sym->shndx == SHN_UNDEF)
+            const elf_sym *sym = elf_find_sym(header, sh->sh_link, offset);
+            if (sym == NULL)
             {
                 debug("%s", "cannot find symbol");
-                return NULL;
+                free(file_buffer);
+                return;
             }
 
-            if (sym->shndx == SHN_ABS)
+            // Compute symbol value.
+            uint32_t value = 0;
+            if (sym->st_shndx == SHN_ABS)
             {
-                symval = sym->value;
+                value = sym->st_value;
             }
             else
             {
-                elf_section_header *temp = &section_headers[sym->shndx];
-                symval = (uint32_t)mem_buffer + sym->value + temp->sh_addr;
-                // offset = file_buffer[sym_section_header->sh_offset]
+                value = (uint32_t)reloc_buffer + sym->st_value + elf_find_sh(header, sym->st_shndx)->sh_addr;
             }
 
-            // offset += (uint32_t)mem_buffer;
-
-            switch (type)
+            // Relocate symbol.
+            uint32_t *target = (uint32_t *)&reloc_buffer[info_sh->sh_addr + rels[j].r_offset];
+            if (!elf_rel_sym(type, target, value))
             {
-            case RELT_386_NONE:
-                break;
-            case RELT_386_32:
-                *ref += symval;
-                // *ref += sym->value + (uint32_t)mem_buffer;
-                break;
-            case RELT_386_PC32:
-                *ref += symval - (uint32_t)ref;
-                // *ref += sym->value + (uint32_t)mem_buffer - (uint32_t)ref;
-                break;
-            default:
                 debug("%s", "cannot relocate symbol");
-                break;
+                free(file_buffer);
+                return;
             }
         }
     }
 
     free(file_buffer);
-    return mem_buffer;
+    *buffer = reloc_buffer;
+    *entry = header->e_entry;
 }

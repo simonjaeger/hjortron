@@ -63,8 +63,6 @@ void mmap_info(const memory_map *memory_map)
     }
 }
 
-extern void kfail();
-
 void main(const boot_info *boot_info)
 {
     display_init();
@@ -94,43 +92,25 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
-    fs_file *file = fs_open("/H/TEST.ELF");
-    if (file == NULL)
-    {
-        printf("Could not open TEST.ELF.");
-    }
-    else
-    {
-        printf("Opened TEST.ELF.\n");
-        void *ptr = elf_read(file);
+    // fs_file *file = fs_open("/H/TEST.ELF");
+    // if (file == NULL)
+    // {
+    //     printf("Could not open TEST.ELF.");
+    // }
+    // else
+    // {
+    //     // Read file.
+    //     void *elf_buffer;
+    //     uint32_t elf_entry;
+    //     elf_read(file, &elf_buffer, &elf_entry);
+    //     uint32_t (*elf_main)(void) = (uint32_t (*)(void)) ((uint32_t)elf_buffer + elf_entry);
 
-        // printf("%x\n", *((uint32_t *)ptr));
+    //     // Close file.
+    //     fs_close(file);
 
-        typedef uint32_t func(void);
-        func *f = (func *)ptr;
-
-        for (size_t i = 0; i < 2000; i++)
-        {
-            debug("%s", "wait");
-        }
-
-        // for (size_t i = 0; i < file->len; i++)
-        // {
-        //     uint8_t d = ((uint8_t*)ptr)[i];
-        //     debug("%x ", d);
-        // }
-
-        fs_close(file);
-
-        uint32_t result = f();
-
-        for (size_t i = 0; i < 2000; i++)
-        {
-            debug("%s", "wait");
-        }
-
-        printf("Kernel resumed: %x", result);
-    }
+    //     // Run file.
+    //     elf_main();
+    // }
 
     while (1)
         ;
