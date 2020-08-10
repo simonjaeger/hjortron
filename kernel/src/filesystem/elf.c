@@ -94,6 +94,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     memset(reloc_buffer, 0, len);
 
     // Copy PROGBITS to buffer.
+    info("%s", "copy progbits");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -112,6 +113,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     }
 
     // Go through each symbol to relocate.
+    info("%s", "relocate symbols");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
