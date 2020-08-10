@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include "debug.h"
 #include "display/display.h"
-#include "device/serial.h"
+#include "drivers/serial.h"
 #include "drivers/cmos.h"
 
 #ifdef DEBUG_SERIAL
