@@ -103,13 +103,13 @@ void main(const boot_info *boot_info)
         void *elf_buffer;
         uint32_t elf_entry;
         elf_read(file, &elf_buffer, &elf_entry);
-        uint32_t (*elf_main)(void) = (uint32_t (*)(void)) ((uint32_t)elf_buffer + elf_entry);
+        __attribute__((unused)) uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
 
         // Close file.
         fs_close(file);
 
-        // Run file.
-        elf_main();
+        // // Run file.
+        // elf_main();
     }
 
     while (1)
