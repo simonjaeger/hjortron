@@ -111,5 +111,5 @@ void exceptions_init()
     irq_init_handler(0x14, exceptions_handle_virtualization_exception);
     irq_init_handler(0x1E, exceptions_handle_security_exception);
 
-    info("%s", "initialized exceptions");
+    info("%s", "initialized");
 }

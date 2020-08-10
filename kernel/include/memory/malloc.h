@@ -2,10 +2,11 @@
 #define MEMORY_MALLOC_H_
 
 #include <stdint.h>
+#include "boot.h"
 
-void malloc_init(uint32_t heap_begin, uint32_t heap_size);
+void malloc_init(const memory_map *mmap);
 
-void *malloc(uint32_t size);
+void *malloc(const uint32_t len);
 void free(void *ptr);
 
 #endif // MEMORY_MALLOC_H_

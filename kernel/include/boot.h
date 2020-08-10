@@ -11,14 +11,14 @@
 typedef struct memory_map_entry
 {
     uint64_t base;
-    uint64_t length;
+    uint64_t len;
     uint32_t type;
     uint32_t acpi;
 } __attribute__((packed)) memory_map_entry;
 
 typedef struct memory_map
 {
-    uint32_t count;
+    uint32_t len;
     memory_map_entry *entries;
 } __attribute__((packed)) memory_map;
 
@@ -38,5 +38,9 @@ typedef struct boot_info
     cpuid cpuid;
     memory_map memory_map;
 } __attribute__((packed)) boot_info;
+
+void disk_info(const boot_info *boot_info);
+void cpuid_info(const cpuid *cpuid);
+void mmap_info(const memory_map *memory_map);
 
 #endif // BOOT_H_
