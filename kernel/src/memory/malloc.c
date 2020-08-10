@@ -7,44 +7,88 @@ typedef struct memory_chunk
     struct memory_chunk *previous_chunk;
     struct memory_chunk *next_chunk;
     bool allocated;
-    uint32_t size;
+    uint32_t len;
 } memory_chunk;
 
+extern void *KERNEL_START;
+extern void *KERNEL_END;
+
 static bool initialized = false;
-static memory_chunk *start_chunk;
+static memory_chunk *start_chunk = NULL;
+static size_t len;
 
-void malloc_init(uint32_t heap_begin, uint32_t heap_size)
+void malloc_init(const memory_map *mmap)
 {
-    // TODO: Check size.
-    // TODO: Zero out heap.
+    memory_chunk *current_chunk = NULL;
 
-    start_chunk = (memory_chunk *)heap_begin;
-    start_chunk->next_chunk = NULL;
-    start_chunk->previous_chunk = NULL;
-    start_chunk->allocated = false;
-    start_chunk->size = heap_size - sizeof(memory_chunk);
+    for (size_t i = 0; i < mmap->len; i++)
+    {
+        if (mmap->entries[i].type != E820_ENTRY_FREE)
+        {
+            continue;
+        }
+
+        if (start_chunk == NULL)
+        {
+            // Find start chunk.
+            if ((uint32_t)&KERNEL_END > mmap->entries[i].base &&
+                (uint32_t)&KERNEL_END <= mmap->entries[i].base + mmap->entries[i].len)
+            {
+                start_chunk = (memory_chunk *)(uint32_t)&KERNEL_END;
+                start_chunk->next_chunk = NULL;
+                start_chunk->previous_chunk = NULL;
+                start_chunk->allocated = false;
+                start_chunk->len = mmap->entries[i].base + mmap->entries[i].len - (uint32_t)&KERNEL_END - sizeof(memory_chunk);
+
+                current_chunk = start_chunk;
+                len += start_chunk->len;
+
+                debug("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
+            }
+            continue;
+        }
+
+        // Find additional chunks.
+        memory_chunk *next_chunk = (memory_chunk *)(uint32_t)mmap->entries[i].base;
+        next_chunk->next_chunk = NULL;
+        next_chunk->previous_chunk = current_chunk;
+        next_chunk->allocated = false;
+        next_chunk->len = mmap->entries[i].len - sizeof(memory_chunk);
+
+        current_chunk->next_chunk = next_chunk;
+        current_chunk = next_chunk;
+        len += next_chunk->len;
+
+        debug("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
+    }
+
+    if (start_chunk == NULL)
+    {
+        error("%s", "cannot find free memory");
+        return;
+    }
+
+    info("initialized, length=%x", len);
 
     initialized = true;
-
-    info("begin=%x size=%x", heap_begin, heap_size);
 }
 
 size_t malloc_deallocated()
 {
-    size_t size = 0;
+    size_t len = 0;
     for (memory_chunk *current_chunk = start_chunk;
          current_chunk != NULL;
          current_chunk = current_chunk->next_chunk)
     {
         if (!current_chunk->allocated)
         {
-            size += current_chunk->size + sizeof(memory_chunk);
+            len += current_chunk->len + sizeof(memory_chunk);
         }
     }
-    return size;
+    return len;
 }
 
-void *malloc(uint32_t size)
+void *malloc(const uint32_t len)
 {
     if (!initialized)
     {
@@ -57,7 +101,7 @@ void *malloc(uint32_t size)
          current_chunk != NULL;
          current_chunk = current_chunk->next_chunk)
     {
-        if (!current_chunk->allocated && current_chunk->size >= size)
+        if (!current_chunk->allocated && current_chunk->len >= len)
         {
             break;
         }
@@ -70,22 +114,22 @@ void *malloc(uint32_t size)
     }
 
     // Check if the chunk can be split.
-    if (current_chunk->size > size + sizeof(memory_chunk))
+    if (current_chunk->len > len + sizeof(memory_chunk))
     {
-        memory_chunk *new_chunk = (memory_chunk *)(((uint8_t *)current_chunk) + size + sizeof(memory_chunk));
+        memory_chunk *new_chunk = (memory_chunk *)(((uint8_t *)current_chunk) + len + sizeof(memory_chunk));
         new_chunk->previous_chunk = current_chunk;
         new_chunk->next_chunk = current_chunk->next_chunk;
         new_chunk->allocated = false;
-        new_chunk->size = current_chunk->size - size - sizeof(memory_chunk);
+        new_chunk->len = current_chunk->len - len - sizeof(memory_chunk);
 
-        // Adjust the size of the current chunk and link with
+        // Adjust the length  of the current chunk and link with
         // the new chunk.
-        current_chunk->size = size;
+        current_chunk->len = len;
         current_chunk->next_chunk = new_chunk;
     }
 
     current_chunk->allocated = true;
-    info("allocate, size=%x/%x, current=%x next=%x", size, malloc_deallocated(), ((uint8_t *)current_chunk) + sizeof(memory_chunk), ((uint8_t *)current_chunk->next_chunk) + sizeof(memory_chunk));
+    info("allocate, length=%x/%x, current=%x next=%x", len, malloc_deallocated(), ((uint8_t *)current_chunk) + sizeof(memory_chunk), ((uint8_t *)current_chunk->next_chunk) + sizeof(memory_chunk));
 
     return (void *)((uint32_t)current_chunk + sizeof(memory_chunk));
 }
@@ -106,34 +150,34 @@ void free(void *ptr)
     }
 
     chunk->allocated = false;
-    info("free, size=%x/%x, current=%x", chunk->size, malloc_deallocated(), ptr);
+    info("free, len=%x/%x, current=%x", chunk->len, malloc_deallocated(), ptr);
 
     // Check if the previous chunk can be merged with the
     // deallocated chunk. Current chunk is removed.
     if (chunk->previous_chunk != NULL && !chunk->previous_chunk->allocated)
     {
         chunk->previous_chunk->next_chunk = chunk->next_chunk;
-        chunk->previous_chunk->size += chunk->size + sizeof(memory_chunk);
+        chunk->previous_chunk->len += chunk->len + sizeof(memory_chunk);
 
         if (chunk->next_chunk != NULL)
         {
             chunk->next_chunk->previous_chunk = chunk->previous_chunk;
         }
         chunk = chunk->previous_chunk;
-        info("merge, mode=previous, size=%x/%x", chunk->size, malloc_deallocated());
+        info("merge, mode=previous, length=%x/%x", chunk->len, malloc_deallocated());
     }
 
     // Check if the next chunk can be merged with the
     // deallocated chunk. Next chunk is removed.
     if (chunk->next_chunk != NULL && !chunk->next_chunk->allocated)
     {
-        chunk->size += chunk->next_chunk->size + sizeof(memory_chunk);
+        chunk->len += chunk->next_chunk->len + sizeof(memory_chunk);
         chunk->next_chunk = chunk->next_chunk->next_chunk;
 
         if (chunk->next_chunk != NULL)
         {
             chunk->next_chunk->previous_chunk = chunk;
         }
-        info("merge, mode=next, size=%x/%x", chunk->size, malloc_deallocated());
+        info("merge, mode=next, length=%x/%x", chunk->len, malloc_deallocated());
     }
 }
