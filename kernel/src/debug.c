@@ -69,7 +69,7 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
     }
 
     // TODO: Get time from CMOS.
-    sprintf(buffer, "00:00:00 %s %s:%d: ", type_str, file, line);
+    sprintf(buffer, "00:00:00 %s %s:%d: ", type_str, &file[4], line);
     dputs(buffer);
 
     // Format string.
