@@ -12,4 +12,4 @@ Running in [QEMU](https://www.qemu.org/) with debug output in Windows (serial po
 
 ## License
 
-A conscious effort is made to provide the project with the MIT License. See [LICENSE].
+A conscious effort is made to provide the project with the MIT License. See [LICENSE](LICENSE).
