@@ -2,14 +2,15 @@
 #include "debug.h"
 #include "display/display.h"
 #include "device/serial.h"
+#include "drivers/cmos.h"
 
 #ifdef DEBUG_SERIAL
 #define DEBUG_FORMATTED
 #define dputc(c) serial_putc(SERIAL_COM1, c)
 #define dputs(s) serial_puts(SERIAL_COM1, s)
 #else
-#define dputc putc
-#define dputs puts
+#define dputc(c) putc(c)
+#define dputs(s) puts(s)
 #endif
 
 #define DEBUG_TYPE_TRACE 0x1
@@ -29,50 +30,57 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
     string type_str = "";
     switch (type)
     {
-    case DEBUG_TYPE_TRACE:
 #ifdef DEBUG_FORMATTED
+    case DEBUG_TYPE_TRACE:
         type_str = "\e[1;34mTRACE\e[0m";
-#else
-        type_str = "TRACE";
-#endif
         break;
     case DEBUG_TYPE_DEBUG:
-#ifdef DEBUG_FORMATTED
         type_str = "\e[1;34mDEBUG\e[0m";
-#else
-        type_str = "DEBUG";
-#endif
         break;
     case DEBUG_TYPE_INFO:
-#ifdef DEBUG_FORMATTED
         type_str = "\e[1;34mINFO\e[0m";
-#else
-        type_str = "INFO";
-#endif
         break;
     case DEBUG_TYPE_WARN:
-#ifdef DEBUG_FORMATTED
         type_str = "\e[1;93mWARN\e[0m";
-#else
-        type_str = "WARN";
-#endif
         break;
     case DEBUG_TYPE_ERROR:
-#ifdef DEBUG_FORMATTED
         type_str = "\e[1;31mERROR\e[0m";
-#else
-        type_str = "ERROR";
-#endif
         break;
+#else
+    case DEBUG_TYPE_TRACE:
+        type_str = "TRACE";
+        break;
+    case DEBUG_TYPE_DEBUG:
+        type_str = "DEBUG";
+        break;
+    case DEBUG_TYPE_INFO:
+        type_str = "INFO";
+        break;
+    case DEBUG_TYPE_WARN:
+        type_str = "WARN";
+        break;
+    case DEBUG_TYPE_ERROR:
+        type_str = "ERROR";
+        break;
+#endif
     default:
         break;
     }
 
-    // TODO: Get time from CMOS.
-    sprintf(buffer, "00:00:00 %s %s:%d: ", type_str, &file[4], line);
+    // Print time.
+    time_t time = cmos_time();
+    sprintf(buffer, time.hour < 10 ? "0%d:" : "%d:", time.hour);
+    dputs(buffer);
+    sprintf(buffer, time.minute < 10 ? "0%d:" : "%d:", time.minute);
+    dputs(buffer);
+    sprintf(buffer, time.second < 10 ? "0%d " : "%d ", time.second);
     dputs(buffer);
 
-    // Format string.
+    // Print debug info.
+    sprintf(buffer, "%s %s:%d: ", type_str, &file[4], line);
+    dputs(buffer);
+
+    // Print string.
     va_list ap;
     va_start(ap, format);
     sprintf_va(buffer, format, ap);
@@ -81,7 +89,6 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
 #ifdef DEBUG_FORMATTED
     dputs("\e[1m");
 #endif
-    // Print string.
     dputs(buffer);
 #ifdef DEBUG_FORMATTED
     dputs("\e[0m\n");
