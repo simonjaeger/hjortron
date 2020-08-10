@@ -8,7 +8,7 @@
 void exceptions_kernel_halt(string reason)
 {
     printf("%fhalt, reason=%s", (text_attribute){COLOR_RED, COLOR_WHITE}, reason);
-    debug("halt, reason=%s", reason);
+    error("halt, reason=%s", reason);
     asm("hlt");
 }
 
@@ -111,5 +111,5 @@ void exceptions_init()
     irq_init_handler(0x14, exceptions_handle_virtualization_exception);
     irq_init_handler(0x1E, exceptions_handle_security_exception);
 
-    debug("%s", "initialized exceptions");
+    info("%s", "initialized exceptions");
 }

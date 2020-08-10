@@ -73,7 +73,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     const elf_header *header = (elf_header *)file_buffer;
     if (!elf_check_file(header) || !elf_check_support(header))
     {
-        debug("%s", "cannot read file");
+        error("%s", "cannot read file");
         free(file_buffer);
         return;
     }
@@ -94,6 +94,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     memset(reloc_buffer, 0, len);
 
     // Copy PROGBITS to buffer.
+    info("%s", "copy progbits");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -112,6 +113,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     }
 
     // Go through each symbol to relocate.
+    info("%s", "relocate symbols");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -135,7 +137,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
             const elf_sym *sym = elf_find_sym(header, sh->sh_link, offset);
             if (sym == NULL)
             {
-                debug("%s", "cannot find symbol");
+                error("%s", "cannot find symbol");
                 free(file_buffer);
                 return;
             }
@@ -155,7 +157,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
             uint32_t *target = (uint32_t *)&reloc_buffer[info_sh->sh_addr + rels[j].r_offset];
             if (!elf_rel_sym(type, target, value))
             {
-                debug("%s", "cannot relocate symbol");
+                error("%s", "cannot relocate symbol");
                 free(file_buffer);
                 return;
             }

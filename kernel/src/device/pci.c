@@ -155,7 +155,7 @@ void pci_init()
                 devices[device_count] = device;
                 device_count++;
 
-                debug("detected device, vendor_id=%x, device_id=%x, class_code=%x, subclass=%x",
+                info("detected device, vendor_id=%x, device_id=%x, class_code=%x, subclass=%x",
                       device->vendor_id,
                       device->device_id,
                       device->class_code,
