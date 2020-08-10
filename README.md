@@ -2,7 +2,7 @@
 
 **Hjortron** is a tiny operating system for Intel Architecture, 32-bit. It is my way to explore the inner workings of a computer. And to learn more about low-level development.
 
-It has a few minimal features; FAT12 (bootloader and filesystem), ATA driver, interrupt support, keyboard input, PCI enumeration, dynamic memory management, ELF relocation, serial ports.
+It has a few minimal features; FAT12 (bootloader and filesystem), ATA driver, interrupt handler, keyboard driver, PCI enumeration, dynamic memory management, ELF relocation, serial port driver.
 
 ## Screenshot
 
