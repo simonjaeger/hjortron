@@ -112,7 +112,7 @@ void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t
 
 fs_file *fat12_open(string path)
 {
-    debug("open, path=%s", path);
+    info("open, path=%s", path);
 
     // Read root directory.
     fat12_directory_entry *entries;
@@ -130,7 +130,7 @@ fs_file *fat12_open(string path)
         {
             if (strlen(buffer) == 0)
             {
-                debug("%s", "empty buffer");
+                error("%s", "empty buffer");
                 return NULL;
             }
 
@@ -161,7 +161,7 @@ fs_file *fat12_open(string path)
 
             if (!ext[0])
             {
-                debug("%s", "invalid path");
+                error("%s", "invalid path");
                 return NULL;
             }
 
@@ -180,7 +180,7 @@ fs_file *fat12_open(string path)
             // Check if the file was found.
             if (entry == NULL)
             {
-                debug("%s", "cannot find file");
+                error("%s", "cannot find file");
                 return NULL;
             }
 
@@ -214,7 +214,7 @@ fs_file *fat12_open(string path)
             // Check if the directory was found.
             if (entry == NULL)
             {
-                debug("%s", "cannot find directory");
+                error("%s", "cannot find directory");
                 return NULL;
             }
 
@@ -233,7 +233,7 @@ fs_file *fat12_open(string path)
         }
         else if (i == FAT12_FILENAME_LENGTH)
         {
-            debug("%s", "buffer overflow");
+            error("%s", "buffer overflow");
             return NULL;
         }
 
@@ -244,13 +244,13 @@ fs_file *fat12_open(string path)
 
 void fat12_close(fs_file *file)
 {
-    debug("close, file=%s", file->name);
+    info("close, file=%s", file->name);
     free(file);
 }
 
 void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    debug("read, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
+    info("read, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
 
     if (file->offset + len > file->len)
     {
@@ -282,7 +282,7 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
     {
         if (!fat12_valid_cluster(cluster))
         {
-            debug("%s", "invalid cluster");
+            error("%s", "invalid cluster");
             return;
         }
 
@@ -327,13 +327,13 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
 
 void fat12_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    debug("write, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
-    debug("%s", "not implemented");
+    info("write, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
+    error("%s", "not implemented");
 }
 
 void fat12_seek(fs_file *file, uint32_t offset)
 {
-    debug("seek, file=%s, ref=%x, offset=%x", file->name, file->ref, offset);
+    info("seek, file=%s, ref=%x, offset=%x", file->name, file->ref, offset);
     file->offset = (file->offset + offset > file->len) ? file->len : offset;
 }
 
@@ -357,7 +357,7 @@ fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_
     driver->write = fat12_write;
     driver->seek = fat12_seek;
 
-    debug("initialized, fat1=%lx, root=%lx, data=%lx", ((uint64_t)lba_fat1), ((uint64_t)lba_root), ((uint64_t)lba_data));
+    info("initialized, fat1=%lx, root=%lx, data=%lx", ((uint64_t)lba_fat1), ((uint64_t)lba_root), ((uint64_t)lba_data));
     return driver;
 }
 

@@ -37,12 +37,12 @@ void disk_info(const boot_info *boot_info)
     {
         type = "fdd";
     }
-    debug("drive=%x type=%s", boot_info->drive, type);
+    info("drive=%x type=%s", boot_info->drive, type);
 }
 
 void cpuid_info(const cpuid *cpuid)
 {
-    debug("vendor=%s features=%x", cpuid->vendor, cpuid->features1);
+    info("vendor=%s features=%x", cpuid->vendor, cpuid->features1);
 }
 
 void mmap_info(const memory_map *memory_map)
@@ -59,7 +59,7 @@ void mmap_info(const memory_map *memory_map)
         {
             type = "reserved";
         }
-        debug("base=%lx length=%lx type=%s", entry->base, entry->length, type);
+        info("base=%lx length=%lx type=%s", entry->base, entry->length, type);
     }
 }
 

@@ -65,7 +65,7 @@ void ata_identify(uint16_t bus, size_t disk)
     uint8_t status = inb(bus + ATA_OFFSET_STATUS);
     if (!status)
     {
-        debug("no drive, bus=%s, drive=%s",
+        info("no drive, bus=%s, drive=%s",
               bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
               disk == ATA_DISK_PRIMARY ? "primary" : "secondary");
         return;
@@ -78,7 +78,7 @@ void ata_identify(uint16_t bus, size_t disk)
     // Check for ERR bit.
     if (status & 0x01)
     {
-        debug("drive error, bus=%s, drive=%s",
+        error("drive error, bus=%s, drive=%s",
               bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
               disk == ATA_DISK_PRIMARY ? "primary" : "secondary");
         return;
@@ -103,11 +103,9 @@ void ata_identify(uint16_t bus, size_t disk)
     strtrim(firmware_revision, ' ');
     strtrim(model_number, ' ');
 
-    debug("detected drive, bus=%s, drive=%s, serial_number=%s, firmware_revision=%s, model_number=%s",
+    info("detected drive, bus=%s, drive=%s, model_number=%s",
           bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
           disk == ATA_DISK_PRIMARY ? "primary" : "secondary",
-          serial_number,
-          firmware_revision,
           model_number);
 }
 
@@ -123,7 +121,7 @@ void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_coun
 
     outb(bus + ATA_OFFSET_COMMAND, ATA_COMMAND_READ);
 
-    debug("read, sector=%d, count=%d, buffer=%x", lba, sector_count, ((uint32_t)buffer));
+    info("read, sector=%d, count=%d, buffer=%x", lba, sector_count, ((uint32_t)buffer));
 
     for (size_t i = 0; i < sector_count; i++)
     {

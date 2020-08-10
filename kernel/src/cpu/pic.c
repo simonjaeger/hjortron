@@ -48,7 +48,7 @@ void pic_init()
     outb(PIC1_DATA, 0x0);
     outb(PIC2_DATA, 0x0);
 
-    debug("initialized, pic1=%x, pic2=%x", PIC1_OFFSET, PIC2_OFFSET);
+    info("initialized, pic1=%x, pic2=%x", PIC1_OFFSET, PIC2_OFFSET);
 }
 
 void pic_eoi(uint8_t irq)

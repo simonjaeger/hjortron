@@ -14,7 +14,7 @@ fs_file *fs_open(string path)
     // Check mount format.
     if (path[0] != '/' || path[2] != '/')
     {
-        debug("%s", "invalid path");
+        error("%s", "invalid path");
         return NULL;
     }
     path++;
@@ -40,7 +40,7 @@ fs_file *fs_open(string path)
         return file;
     }
 
-    debug("%s", "cannot find driver");
+    error("%s", "cannot find driver");
     return NULL;
 }
 
@@ -48,13 +48,13 @@ void fs_close(fs_file *file)
 {
     if (file == NULL)
     {
-        debug("%s", "invalid file");
+        error("%s", "invalid file");
         return;
     }
 
     if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
     {
-        debug("%s", "cannot find driver");
+        error("%s", "cannot find driver");
         return;
     }
 
@@ -65,13 +65,13 @@ void fs_read(fs_file *file, uint32_t *buffer, uint32_t len)
 {
     if (file == NULL)
     {
-        debug("%s", "invalid file");
+        error("%s", "invalid file");
         return;
     }
 
     if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
     {
-        debug("%s", "cannot find driver");
+        error("%s", "cannot find driver");
         return;
     }
 
@@ -82,13 +82,13 @@ void fs_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
     if (file == NULL)
     {
-        debug("%s", "invalid file");
+        error("%s", "invalid file");
         return;
     }
 
     if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
     {
-        debug("%s", "cannot find driver");
+        error("%s", "cannot find driver");
         return;
     }
 
@@ -99,13 +99,13 @@ void fs_seek(fs_file *file, uint32_t offset)
 {
     if (file == NULL)
     {
-        debug("%s", "invalid file");
+        error("%s", "invalid file");
         return;
     }
 
     if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
     {
-        debug("%s", "cannot find driver");
+        error("%s", "cannot find driver");
         return;
     }
 
@@ -123,8 +123,8 @@ void fs_mount(fs_driver *driver, char mnt)
 
         drivers[i] = driver;
         drivers[i]->mnt = mnt;
-        debug("mount driver, mnt=%c", mnt);
+        info("mount driver, mnt=%c", mnt);
         return;
     }
-    debug("%s", "cannot mount driver");
+    error("%s", "cannot mount driver");
 }

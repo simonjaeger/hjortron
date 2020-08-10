@@ -26,7 +26,7 @@ void malloc_init(uint32_t heap_begin, uint32_t heap_size)
 
     initialized = true;
 
-    debug("begin=%x size=%x", heap_begin, heap_size);
+    info("begin=%x size=%x", heap_begin, heap_size);
 }
 
 size_t malloc_deallocated()
@@ -65,7 +65,7 @@ void *malloc(uint32_t size)
 
     if (current_chunk == NULL)
     {
-        debug("%s", "cannot find chunk");
+        error("%s", "cannot find chunk");
         return NULL;
     }
 
@@ -85,7 +85,7 @@ void *malloc(uint32_t size)
     }
 
     current_chunk->allocated = true;
-    debug("allocate, size=%x/%x, current=%x next=%x", size, malloc_deallocated(), ((uint8_t *)current_chunk) + sizeof(memory_chunk), ((uint8_t *)current_chunk->next_chunk) + sizeof(memory_chunk));
+    info("allocate, size=%x/%x, current=%x next=%x", size, malloc_deallocated(), ((uint8_t *)current_chunk) + sizeof(memory_chunk), ((uint8_t *)current_chunk->next_chunk) + sizeof(memory_chunk));
 
     return (void *)((uint32_t)current_chunk + sizeof(memory_chunk));
 }
@@ -101,12 +101,12 @@ void free(void *ptr)
 
     if (!chunk->allocated)
     {
-        debug("%s", "cannot deallocate chunk");
+        error("%s", "cannot deallocate chunk");
         return;
     }
 
     chunk->allocated = false;
-    debug("free, size=%x/%x, current=%x", chunk->size, malloc_deallocated(), ptr);
+    info("free, size=%x/%x, current=%x", chunk->size, malloc_deallocated(), ptr);
 
     // Check if the previous chunk can be merged with the
     // deallocated chunk. Current chunk is removed.
@@ -120,7 +120,7 @@ void free(void *ptr)
             chunk->next_chunk->previous_chunk = chunk->previous_chunk;
         }
         chunk = chunk->previous_chunk;
-        debug("merge, mode=previous, size=%x/%x", chunk->size, malloc_deallocated());
+        info("merge, mode=previous, size=%x/%x", chunk->size, malloc_deallocated());
     }
 
     // Check if the next chunk can be merged with the
@@ -134,6 +134,6 @@ void free(void *ptr)
         {
             chunk->next_chunk->previous_chunk = chunk;
         }
-        debug("merge, mode=next, size=%x/%x", chunk->size, malloc_deallocated());
+        info("merge, mode=next, size=%x/%x", chunk->size, malloc_deallocated());
     }
 }

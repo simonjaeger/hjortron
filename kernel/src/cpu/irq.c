@@ -110,33 +110,33 @@ void irq_init()
 
     asm volatile("lidt %0" ::"m"(idtr));
 
-    debug("%s", "initialized");
+    info("%s", "initialized");
 }
 
 void irq_enable()
 {
     asm("sti");
 
-    debug("%s", "enabled");
+    info("%s", "enabled");
 }
 
 void irq_disable()
 {
     asm("cli");
 
-    debug("%s", "disabled");
+    info("%s", "disabled");
 }
 
 void irq_init_handler(uint8_t irq, void *(handler))
 {
     handlers[irq] = handler;
 
-    debug("initialized handler, irq=%x, handler=%lx", irq, (uint32_t)handler);
+    info("initialized handler, irq=%x, handler=%lx", irq, (uint32_t)handler);
 }
 
 void irq_terminate_handler(uint8_t irq)
 {
     handlers[irq] = NULL;
 
-    debug("terminated handler, irq=%x", irq);
+    info("terminated handler, irq=%x", irq);
 }
