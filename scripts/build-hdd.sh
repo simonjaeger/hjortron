@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # Create loopback device.
 dd if=/dev/zero of=bin/hdd.img bs=1048576 count=32
 # dd if=/dev/zero of=bin/hdd.img bs=1048576 count=4
