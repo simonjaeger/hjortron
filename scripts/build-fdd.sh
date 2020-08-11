@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # Create loopback device.
 dd if=/dev/zero of=bin/fdd.img bs=512 count=2880
 sudo losetup /dev/loop0 bin/fdd.img
