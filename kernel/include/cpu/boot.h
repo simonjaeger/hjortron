@@ -1,5 +1,5 @@
-#ifndef BOOT_H_
-#define BOOT_H_
+#ifndef CPU_BOOT_H_
+#define CPU_BOOT_H_
 
 #include <stdint.h>
 #include "string.h"
@@ -43,4 +43,4 @@ void disk_info(const boot_info *boot_info);
 void cpuid_info(const cpuid *cpuid);
 void mmap_info(const memory_map *memory_map);
 
-#endif // BOOT_H_
+#endif // CPU_BOOT_H_

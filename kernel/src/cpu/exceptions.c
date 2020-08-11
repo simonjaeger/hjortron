@@ -1,4 +1,4 @@
-#include "exceptions.h"
+#include "cpu/exceptions.h"
 #include "cpu/irq.h"
 #include "string.h"
 #include "debug.h"
