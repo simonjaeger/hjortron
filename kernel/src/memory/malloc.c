@@ -95,6 +95,12 @@ void *malloc(const uint32_t len)
         return NULL;
     }
 
+    if (len == 0)
+    {
+        error("%s", "invalid length");
+        return NULL;
+    }
+
     // Find an deallocated chunk that is big enough.
     memory_chunk *current_chunk = NULL;
     for (current_chunk = start_chunk;

@@ -63,6 +63,18 @@ bool elf_rel_sym(uint8_t type, uint32_t *target, uint32_t value)
     return true;
 }
 
+string elf_str(const elf_header *header, const size_t idx)
+{
+    if (header->e_shstrndx == SHN_UNDEF)
+    {
+        error("%s", "cannot find string table");
+        return NULL;
+    }
+
+    const elf_section_header *sh = elf_find_sh(header, header->e_shstrndx);
+    return (string)((uint32_t)header + sh->sh_offset + idx * sizeof(char));
+}
+
 void elf_read(fs_file *file, void **buffer, uint32_t *entry)
 {
     // Read file.
@@ -80,21 +92,6 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
 
     // Compute length of buffer.
     size_t len = 0;
-    for (size_t i = 0; i < header->e_phnum; i++)
-    {
-        const elf_program_header *ph = elf_find_ph(header, i);
-        if (ph->ph_type == PHT_LOAD)
-        {
-            continue;
-        }
-        len += ph->ph_memsz;
-    }
-
-    uint8_t *reloc_buffer = (uint8_t *)malloc(len);
-    memset(reloc_buffer, 0, len);
-
-    // Copy PROGBITS to buffer.
-    info("%s", "copy progbits");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -102,18 +99,30 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
         {
             continue;
         }
+        len += sh->sh_size;
+    }
 
-        // Skip sections like .bss.
-        if (sh->sh_type != SHT_PROGBITS)
+    uint8_t *reloc_buffer = (uint8_t *)malloc(len);
+    memset(reloc_buffer, 0, len);
+
+    // Copy data to buffer.
+    for (size_t i = 0; i < header->e_shnum; i++)
+    {
+        const elf_section_header *sh = elf_find_sh(header, i);
+        if (!(sh->sh_flags & SHF_ALLOC) || (sh->sh_type != SHT_PROGBITS))
         {
             continue;
+        }
+
+        if (sh->sh_name != SHN_UNDEF)
+        {
+            info("copy, section=%s", elf_str(header, sh->sh_name));
         }
 
         memcpy(&reloc_buffer[sh->sh_addr], &file_buffer[sh->sh_offset], sh->sh_size);
     }
 
     // Go through each symbol to relocate.
-    info("%s", "relocate symbols");
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -122,6 +131,11 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
         if (sh->sh_type != SHT_REL)
         {
             continue;
+        }
+
+        if (sh->sh_name != SHN_UNDEF)
+        {
+            info("relocate, section=%s", elf_str(header, sh->sh_name));
         }
 
         const elf_rel *rels = (elf_rel *)&file_buffer[sh->sh_offset];
