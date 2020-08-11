@@ -2,7 +2,7 @@
 #define MEMORY_MALLOC_H_
 
 #include <stdint.h>
-#include "boot.h"
+#include "cpu/boot.h"
 
 void malloc_init(const memory_map *mmap);
 

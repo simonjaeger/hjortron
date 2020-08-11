@@ -1,4 +1,4 @@
-#include "boot.h"
+#include "cpu/boot.h"
 #include "debug.h"
 
 void disk_info(const boot_info *boot_info)
