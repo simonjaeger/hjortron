@@ -7,6 +7,7 @@
 #include "display/colors.h"
 #include "cpu/irq.h"
 #include "cpu/pic.h"
+#include "drivers/pit.h"
 #include "drivers/keyboard.h"
 #include "drivers/pci.h"
 #include "drivers/serial.h"
@@ -37,6 +38,7 @@ void main(const boot_info *boot_info)
     irq_enable();
 
     // Initialize drivers.
+    pit_init();
     keyboard_init();
     pci_init();
     serial_init(SERIAL_COM1);
