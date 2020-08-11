@@ -3,6 +3,7 @@
 #include "drivers/pit.h"
 #include "cpu/io.h"
 #include "cpu/irq.h"
+#include "debug.h"
 
 #define PIT_CHANNEL0_DATA 0x40
 #define PIT_CHANNEL1_DATA 0x41
@@ -29,4 +30,6 @@ void pit_init()
     outb(PIT_CHANNEL0_DATA, data >> 8);
 
     irq_init_handler(0x20, pit_handle_irq);
+
+    info("%s", "initialized");
 }
