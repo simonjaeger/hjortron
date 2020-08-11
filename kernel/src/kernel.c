@@ -47,7 +47,7 @@ void main(const boot_info *boot_info)
     fs_mount(fat12_driver, 'H');
 
     // Test ELF load.
-    fs_file *file = fs_open("/H/TEST.ELF");
+    fs_file *file = fs_open("/H/APPS/TEST.ELF");
     if (file == NULL)
     {
         printf("Could not open TEST.ELF.");

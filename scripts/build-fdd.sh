@@ -16,11 +16,10 @@ sudo mount /dev/loop0 /mnt -t msdos -o "fat=12"
 # Copy files.
 sudo cp boot/bin/init.bin /mnt
 sudo cp kernel/bin/kernel.bin /mnt
-sudo cp apps/bin/test.elf /mnt
-sudo mkdir /mnt/data1
-sudo mkdir /mnt/data1/data2
-sudo echo "test1" > /mnt/data1/test1.txt
-sudo echo "test2" > /mnt/data1/data2/test2.txt
+sudo mkdir /mnt/apps
+sudo mkdir /mnt/data
+sudo cp apps/bin/test.elf /mnt/apps
+sudo cp scripts/lorem.txt /mnt/data
 
 # Unmount and destroy device.
 sudo umount /mnt

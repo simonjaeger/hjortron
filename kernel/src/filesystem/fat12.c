@@ -135,14 +135,16 @@ fs_file *fat12_open(string path)
             }
 
             // Find extension.
-            char ext[3] = {0, 0, 0};
+            char ext[FAT12_EXTENSION_LENGTH];
+            memset(ext, 0, FAT12_EXTENSION_LENGTH);
+
             for (size_t k = 1; k < FAT12_FILENAME_LENGTH; k++)
             {
                 if (ext[0])
                 {
-                    if (k >= 8)
+                    if (k >= FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH)
                     {
-                        buffer[k] = ext[k - 8];
+                        buffer[k] = ext[k - (FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH)];
                         continue;
                     }
 
@@ -152,9 +154,7 @@ fs_file *fat12_open(string path)
 
                 if (buffer[k] == '.')
                 {
-                    ext[0] = buffer[k + 1];
-                    ext[1] = buffer[k + 2];
-                    ext[2] = buffer[k + 3];
+                    memcpy(&ext, &buffer[k + 1], FAT12_EXTENSION_LENGTH);
                     k--;
                 }
             }
@@ -167,12 +167,12 @@ fs_file *fat12_open(string path)
 
             // Find file within directory.
             fat12_directory_entry *entry = NULL;
-            for (size_t i = 0; i < entries_len; i++)
+            for (size_t k = 0; k < entries_len; k++)
             {
-                if (entries[i].attributes == FAT12_ATTRIBUTE_ARCHIVE &&
-                    fat12_strcmp(entries[i].filename, buffer, FAT12_FILENAME_LENGTH))
+                if (entries[k].attributes == FAT12_ATTRIBUTE_ARCHIVE &&
+                    fat12_strcmp(entries[k].filename, buffer, FAT12_FILENAME_LENGTH))
                 {
-                    entry = &entries[i];
+                    entry = &entries[k];
                     break;
                 }
             }
@@ -186,12 +186,18 @@ fs_file *fat12_open(string path)
 
             // Create file.
             fs_file *file = (fs_file *)malloc(sizeof(fs_file));
-            strset(file->name, '\0', FILE_NAME_LENGTH);
-            strcpy(entry->filename, file->name, FAT12_FILENAME_LENGTH);
-
             file->ref = (entry->cluster_high << 16) | entry->cluster_low;
             file->len = entry->size;
             file->offset = 0;
+
+            // Format file name and extension.
+            memset(file->name, 0, FILE_NAME_LENGTH);
+            memcpy(file->name, entry->filename, FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH);
+            strtrim(file->name, ' ');
+
+            size_t k = strlen(file->name);
+            file->name[k++] = '.';
+            memcpy(&file->name[k], &entry->filename[FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH], FAT12_EXTENSION_LENGTH);
 
             // Deallocate previous buffer.
             free(entries);
