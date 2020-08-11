@@ -35,13 +35,13 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
         type_str = "\e[1;34mTRACE\e[0m";
         break;
     case DEBUG_TYPE_DEBUG:
-        type_str = "\e[1;34mDEBUG\e[0m";
+        type_str = "\e[1;33mDEBUG\e[0m";
         break;
     case DEBUG_TYPE_INFO:
         type_str = "\e[1;34mINFO\e[0m";
         break;
     case DEBUG_TYPE_WARN:
-        type_str = "\e[1;93mWARN\e[0m";
+        type_str = "\e[1;33mWARN\e[0m";
         break;
     case DEBUG_TYPE_ERROR:
         type_str = "\e[1;31mERROR\e[0m";

@@ -43,7 +43,7 @@ void malloc_init(const memory_map *mmap)
                 current_chunk = start_chunk;
                 len += start_chunk->len;
 
-                debug("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
+                info("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
             }
             continue;
         }
@@ -59,7 +59,7 @@ void malloc_init(const memory_map *mmap)
         current_chunk = next_chunk;
         len += next_chunk->len;
 
-        debug("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
+        info("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
     }
 
     if (start_chunk == NULL)
@@ -150,7 +150,7 @@ void free(void *ptr)
     }
 
     chunk->allocated = false;
-    info("free, len=%x/%x, current=%x", chunk->len, malloc_deallocated(), ptr);
+    info("free, length=%x/%x, current=%x", chunk->len, malloc_deallocated(), ptr);
 
     // Check if the previous chunk can be merged with the
     // deallocated chunk. Current chunk is removed.
