@@ -74,9 +74,19 @@ void main(const boot_info *boot_info)
     {
         printf("Could not open /H/APPS");
     }
-    else 
+    else
     {
-        printf("Opened /H/APPS %s %d", dir->name, dir->ref);
+        printf("Opened /H/APPS %s %d\n", dir->name, dir->ref);
+
+        fs_dirent *dirents;
+        size_t dirent_len;
+        fs_readdir(dir, &dirents, &dirent_len);
+
+        for (size_t i = 0; i < dirent_len; i++)
+        {
+            debug("%s %d", dirents[i].name, dirents[i].type);
+        }
+
         fs_closedir(dir);
     }
 

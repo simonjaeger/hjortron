@@ -130,6 +130,23 @@ void fs_read(fs_file *file, uint32_t *buffer, uint32_t len)
     file->driver->read(file, buffer, len);
 }
 
+void fs_readdir(fs_dir *dir, fs_dirent **entries, uint32_t *len)
+{
+    if (dir == NULL)
+    {
+        error("%s", "invalid directory");
+        return;
+    }
+
+    if (dir->driver == NULL || dir->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
+    {
+        error("%s", "cannot find driver");
+        return;
+    }
+
+    dir->driver->readdir(dir, entries, len);
+}
+
 void fs_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
     if (file == NULL)

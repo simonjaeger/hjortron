@@ -116,7 +116,7 @@ fs_file *fat12_open(string path)
 
     // Read root directory.
     fat12_directory_entry *entries;
-    size_t entries_len = bpb->directory_entries;
+    size_t entries_len;
     fat12_read_directory(&entries, &entries_len, 0);
 
     char buffer[FAT12_FILENAME_LENGTH + 1];
@@ -265,7 +265,7 @@ fs_dir *fat12_opendir(string path)
 
     // Read root directory.
     fat12_directory_entry *entries;
-    size_t entries_len = bpb->directory_entries;
+    size_t entries_len;
     fat12_read_directory(&entries, &entries_len, 0);
 
     char buffer[FAT12_FILENAME_LENGTH + 1];
@@ -449,6 +449,49 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
     free(src_buffer);
 }
 
+void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __attribute__((unused)) uint32_t *len)
+{
+    info("readdir, dir=%s, ref=%x", dir->name, dir->ref);
+
+    // Read directory.
+    fat12_directory_entry *entries;
+    size_t entries_len;
+    fat12_read_directory(&entries, &entries_len, dir->ref);
+
+    // Compute buffer size.
+    size_t dirents_len = 0;
+    for (size_t i = 0; i < entries_len; i++)
+    {
+        if (entries[i].attributes != FAT12_ATTRIBUTE_DIRECTORY &&
+            entries[i].attributes != FAT12_ATTRIBUTE_ARCHIVE)
+        {
+            continue;
+        }
+
+        if (fat12_strcmp(entries[i].filename, ".          ", FAT12_FILENAME_LENGTH) ||
+            fat12_strcmp(entries[i].filename, "..         ", FAT12_FILENAME_LENGTH))
+        {
+            continue;
+        }
+
+        dirents_len++;
+    }
+
+    debug("%d", dirents_len);
+
+    // debug("%s", entries[i].filename);
+
+    // *entries_ = (fs_dirent *)malloc((*len) * sizeof(fs_dirent));
+    // for (size_t i = 0; i < *len; i++)
+    // {
+    //     if (entries[i].attributes == FAT12_ATTRIBUTE_DIRECTORY ||
+    //         entries[i].attributes == FAT12_ATTRIBUTE_ARCHIVE)
+    //     {
+    //         (*entries_)[i].name = "test";
+    //     }
+    // }
+}
+
 void fat12_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
     info("write, file=%s, ref=%x, buffer=%x, length=%x", file->name, file->ref, ((uint32_t)buffer), len);
@@ -480,6 +523,7 @@ fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_
     driver->close = fat12_close;
     driver->closedir = fat12_closedir;
     driver->read = fat12_read;
+    driver->readdir = fat12_readdir;
     driver->write = fat12_write;
     driver->seek = fat12_seek;
 
