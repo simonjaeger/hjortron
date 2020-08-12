@@ -148,7 +148,7 @@ char get_char(enum key_code kc, bool upper)
     }
 }
 
-void handle_irq()
+void handle_irq(__attribute__((unused)) const regs *r)
 {
     uint8_t key = inb(0x60);
     enum key_code kc = NONE;
