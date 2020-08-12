@@ -38,7 +38,17 @@ ISR_ERROR_CODE  17  ; Alignment check.
 ISR_DEFAULT     18  ; Machine check.
 ISR_DEFAULT     19  ; SIMD floating-point.
 ISR_DEFAULT     20  ; Virtualization.
+ISR_DEFAULT     21  ; Reserved.
+ISR_DEFAULT     22  ; Reserved.
+ISR_DEFAULT     23  ; Reserved.
+ISR_DEFAULT     24  ; Reserved.
+ISR_DEFAULT     25  ; Reserved.
+ISR_DEFAULT     26  ; Reserved.
+ISR_DEFAULT     27  ; Reserved.
+ISR_DEFAULT     28  ; Reserved.
+ISR_DEFAULT     29  ; Reserved.
 ISR_ERROR_CODE  30  ; Security.
+ISR_DEFAULT     31  ; Reserved.
 
 ISR_DEFAULT     32  ; Timer.
 ISR_DEFAULT     33  ; Keyboard.
