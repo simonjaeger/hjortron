@@ -70,10 +70,10 @@ ISR_DEFAULT     47  ; Secondary ATA HDD.
 isr_common:
     ; Push state.
     pushad
-	push ds
-	push es
-	push fs
-	push gs
+    push ds
+    push es
+    push fs
+    push gs
 
     ; Push stack address.    
     mov eax, esp
@@ -86,10 +86,10 @@ isr_common:
 
     ; Restore state.
     pop eax
-	pop gs
-	pop fs
-	pop es
-	pop ds
+    pop gs
+    pop fs
+    pop es
+    pop ds
     popad
     add esp, 8
 
