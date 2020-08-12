@@ -31,7 +31,7 @@ void irq_init();
 void irq_enable();
 void irq_disable();
 
-void irq_init_handler(uint8_t irq, void *(handler));
+void irq_init_handler(uint8_t irq, void (*handler)(const regs *r));
 void irq_terminate_handler(uint8_t irq);
 
 #endif // CPU_IRQ_H_

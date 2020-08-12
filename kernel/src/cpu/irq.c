@@ -4,7 +4,7 @@
 #include "debug.h"
 
 static idt_entry entries[IDT_SIZE] = {0};
-static void (*handlers[IDT_SIZE])() = {0};
+static void (*handlers[IDT_SIZE])(const regs *r) = {0};
 
 extern void isr0();
 extern void isr1();
@@ -15,11 +15,13 @@ extern void isr5();
 extern void isr6();
 extern void isr7();
 extern void isr8();
+extern void isr9();
 extern void isr10();
 extern void isr11();
 extern void isr12();
 extern void isr13();
 extern void isr14();
+extern void isr15();
 extern void isr16();
 extern void isr17();
 extern void isr18();
@@ -52,7 +54,7 @@ extern void irq_handler(const regs *r)
 
     if (handlers[r->irq] != NULL)
     {
-        handlers[r->irq]();
+        handlers[r->irq](r);
     }
 }
 
@@ -74,11 +76,13 @@ void irq_init()
     init_idt_entry(&entries[0x06], segment, isr6, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x07], segment, isr7, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x08], segment, isr8, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x08], segment, isr9, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x0A], segment, isr10, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x0B], segment, isr11, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x0C], segment, isr12, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x0D], segment, isr13, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x0E], segment, isr14, 0, IDT_GATE_TYPE_INTERRUPT_32);
+    init_idt_entry(&entries[0x0E], segment, isr15, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x10], segment, isr16, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x11], segment, isr17, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[0x12], segment, isr18, 0, IDT_GATE_TYPE_INTERRUPT_32);
@@ -127,7 +131,7 @@ void irq_disable()
     info("%s", "disabled");
 }
 
-void irq_init_handler(uint8_t irq, void *(handler))
+void irq_init_handler(uint8_t irq, void (*handler)(const regs *r))
 {
     handlers[irq] = handler;
 

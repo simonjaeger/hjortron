@@ -17,26 +17,28 @@ isr%1:
     jmp isr_common
 %endmacro
 
-ISR_DEFAULT     0   ; Divide-by-zero error.
+ISR_DEFAULT     0   ; Divide by zero.
 ISR_DEFAULT     1   ; Debug.
 ISR_DEFAULT     2   ; Non-maskable interrupt.
 ISR_DEFAULT     3   ; Breakpoint.
 ISR_DEFAULT     4   ; Overflow.
-ISR_DEFAULT     5   ; Bound range exceeded.
+ISR_DEFAULT     5   ; Out of bounds.
 ISR_DEFAULT     6   ; Invalid opcode.
 ISR_DEFAULT     7   ; Device not available.
 ISR_ERROR_CODE  8   ; Double fault.
+ISR_DEFAULT     9   ; Reserved.
 ISR_ERROR_CODE  10  ; Invalid TSS.
-ISR_ERROR_CODE  11  ; Segment not present
-ISR_ERROR_CODE  12  ; Stack-segment fault.
+ISR_ERROR_CODE  11  ; Invalid segment.
+ISR_ERROR_CODE  12  ; Stack fault.
 ISR_ERROR_CODE  13  ; General protection fault.
 ISR_ERROR_CODE  14  ; Page fault.
-ISR_DEFAULT     16  ; x87 floating-point exception.
+ISR_DEFAULT     15  ; Reserved
+ISR_DEFAULT     16  ; x87 floating-point.
 ISR_ERROR_CODE  17  ; Alignment check.
 ISR_DEFAULT     18  ; Machine check.
-ISR_DEFAULT     19  ; SIMD floating-point exception.
-ISR_DEFAULT     20  ; Virtualization exception.
-ISR_ERROR_CODE  30  ; Security exception.
+ISR_DEFAULT     19  ; SIMD floating-point.
+ISR_DEFAULT     20  ; Virtualization.
+ISR_ERROR_CODE  30  ; Security.
 
 ISR_DEFAULT     32  ; Timer.
 ISR_DEFAULT     33  ; Keyboard.
