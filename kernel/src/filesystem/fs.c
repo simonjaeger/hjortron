@@ -44,6 +44,41 @@ fs_file *fs_open(string path)
     return NULL;
 }
 
+fs_dir *fs_opendir(string path)
+{
+    // Check mount format.
+    if (path[0] != '/' || path[2] != '/')
+    {
+        error("%s", "invalid path");
+        return NULL;
+    }
+    path++;
+
+    for (size_t i = 0; i < DRIVERS_LENGTH; i++)
+    {
+        if (drivers[i] == NULL)
+        {
+            break;
+        }
+
+        // Check for correct driver.
+        if (drivers[i]->mnt != path[0])
+        {
+            continue;
+        }
+
+        path += 2;
+
+        // Open directory and assign driver.
+        fs_dir *dir = drivers[i]->opendir(path);
+        dir->driver = drivers[i];
+        return dir;
+    }
+
+    error("%s", "cannot find driver");
+    return NULL;
+}
+
 void fs_close(fs_file *file)
 {
     if (file == NULL)
@@ -59,6 +94,23 @@ void fs_close(fs_file *file)
     }
 
     file->driver->close(file);
+}
+
+void fs_closedir(fs_dir *dir)
+{
+    if (dir == NULL)
+    {
+        error("%s", "invalid directory");
+        return;
+    }
+
+    if (dir->driver == NULL || dir->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
+    {
+        error("%s", "cannot find driver");
+        return;
+    }
+
+    dir->driver->closedir(dir);
 }
 
 void fs_read(fs_file *file, uint32_t *buffer, uint32_t len)

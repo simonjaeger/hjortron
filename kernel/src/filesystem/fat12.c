@@ -180,7 +180,7 @@ fs_file *fat12_open(string path)
             // Check if the file was found.
             if (entry == NULL)
             {
-                error("%s", "cannot find file");
+                warn("%s", "cannot find file");
                 return NULL;
             }
 
@@ -248,10 +248,128 @@ fs_file *fat12_open(string path)
     return NULL;
 }
 
+fs_dir *fat12_opendir(string path)
+{
+    info("opendir, path=%s", path);
+
+    // Format path.
+    strtrim(path, '/');
+
+    if (!strlen(path))
+    {
+        // Create directory.
+        fs_dir *dir = (fs_dir *)malloc(sizeof(fs_dir));
+        dir->ref = 0;
+        return dir;
+    }
+
+    // Read root directory.
+    fat12_directory_entry *entries;
+    size_t entries_len = bpb->directory_entries;
+    fat12_read_directory(&entries, &entries_len, 0);
+
+    char buffer[FAT12_FILENAME_LENGTH + 1];
+    strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
+    size_t i = 0;
+    size_t j = 0;
+
+    while (true)
+    {
+        if (path[j] == '\0')
+        {
+            if (strlen(buffer) == 0)
+            {
+                error("%s", "empty buffer");
+                return NULL;
+            }
+
+            // Find directory within directory.
+            fat12_directory_entry *entry = NULL;
+            for (size_t k = 0; k < entries_len; k++)
+            {
+                if (entries[k].attributes == FAT12_ATTRIBUTE_DIRECTORY &&
+                    fat12_strcmp(entries[k].filename, buffer, FAT12_FILENAME_LENGTH))
+                {
+                    entry = &entries[k];
+                    break;
+                }
+            }
+
+            // Check if the directory was found.
+            if (entry == NULL)
+            {
+                warn("%s", "cannot find directory");
+                return NULL;
+            }
+
+            // Create directory.
+            fs_dir *dir = (fs_dir *)malloc(sizeof(fs_dir));
+            dir->ref = (entry->cluster_high << 16) | entry->cluster_low;
+
+            // Format directory name and extension.
+            memset(dir->name, 0, FILE_NAME_LENGTH);
+            memcpy(dir->name, entry->filename, FAT12_FILENAME_LENGTH);
+            strtrim(dir->name, ' ');
+
+            // Deallocate previous buffer.
+            free(entries);
+            return dir;
+        }
+        else if (path[j] == '/' && path[j + 1] != '\0')
+        {
+            // Find directory within directory.
+            fat12_directory_entry *entry = NULL;
+            for (size_t i = 0; i < entries_len; i++)
+            {
+                if (entries[i].attributes == FAT12_ATTRIBUTE_DIRECTORY &&
+                    fat12_strcmp(entries[i].filename, buffer, FAT12_FILENAME_LENGTH))
+                {
+                    entry = &entries[i];
+                    break;
+                }
+            }
+
+            // Check if the directory was found.
+            if (entry == NULL)
+            {
+                error("%s", "cannot find directory");
+                return NULL;
+            }
+
+            // Compute cluster and deallocate previous buffer.
+            uint16_t cluster = (entry->cluster_high << 16) | entry->cluster_low;
+            free(entries);
+
+            // Read directory.
+            fat12_read_directory(&entries, &entries_len, cluster);
+
+            // Clear buffer.
+            strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
+            i = 0;
+            j++;
+            continue;
+        }
+        else if (i == FAT12_FILENAME_LENGTH)
+        {
+            error("%s", "buffer overflow");
+            return NULL;
+        }
+
+        buffer[i++] = path[j++];
+    }
+    return NULL;
+}
+
 void fat12_close(fs_file *file)
 {
     info("close, file=%s", file->name);
     free(file);
+}
+
+void fat12_closedir(fs_dir *dir)
+{
+    info("close, dir=%s", dir->name);
+    free(dir);
 }
 
 void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
@@ -358,7 +476,9 @@ fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_
     fs_driver *driver = (fs_driver *)malloc(sizeof(fs_driver));
     driver->mnt = DRIVER_MOUNT_UNASSIGNED;
     driver->open = fat12_open;
+    driver->opendir = fat12_opendir;
     driver->close = fat12_close;
+    driver->closedir = fat12_closedir;
     driver->read = fat12_read;
     driver->write = fat12_write;
     driver->seek = fat12_seek;

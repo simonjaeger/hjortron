@@ -69,6 +69,17 @@ void main(const boot_info *boot_info)
         // elf_main();
     }
 
+    fs_dir *dir = fs_opendir("/H/APPS/");
+    if (dir == NULL)
+    {
+        printf("Could not open /H/APPS");
+    }
+    else 
+    {
+        printf("Opened /H/APPS %s %d", dir->name, dir->ref);
+        fs_closedir(dir);
+    }
+
     while (1)
         ;
 }
