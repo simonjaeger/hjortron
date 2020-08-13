@@ -18,6 +18,7 @@
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
 #include "filesystem/elf.h"
+#include "assert.h"
 
 void main(const boot_info *boot_info)
 {
@@ -65,7 +66,7 @@ void main(const boot_info *boot_info)
         // Close file.
         fs_close(file);
 
-        // // Run file.
+        // Run file.
         // elf_main();
     }
 
@@ -89,6 +90,8 @@ void main(const boot_info *boot_info)
 
     //     fs_closedir(dir);
     // }
+
+    malloc(0);
 
     while (1)
         ;

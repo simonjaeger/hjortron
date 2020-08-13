@@ -3,6 +3,7 @@
 #include "memory/malloc.h"
 #include "string.h"
 #include "debug.h"
+#include "assert.h"
 
 bool elf_check_file(const elf_header *header)
 {
@@ -83,12 +84,8 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
 
     // Check file and support.
     const elf_header *header = (elf_header *)file_buffer;
-    if (!elf_check_file(header) || !elf_check_support(header))
-    {
-        error("%s", "cannot read file");
-        free(file_buffer);
-        return;
-    }
+    assert(elf_check_file(header));
+    assert(elf_check_support(header));
 
     // Compute length of buffer.
     size_t len = 0;
