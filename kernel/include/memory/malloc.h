@@ -7,6 +7,7 @@
 void malloc_init(const memory_map *mmap);
 
 void *malloc(const uint32_t len);
+void *realloc(void *ptr, const uint32_t len);
 void free(void *ptr);
 
 #endif // MEMORY_MALLOC_H_

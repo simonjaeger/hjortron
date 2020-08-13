@@ -140,10 +140,58 @@ void *malloc(const uint32_t len)
     return (void *)((uint32_t)current_chunk + sizeof(memory_chunk));
 }
 
+void *realloc(void *ptr, const uint32_t len)
+{
+    if (!initialized)
+    {
+        return NULL;
+    }
+
+    if (ptr == NULL)
+    {
+        error("%s", "invalid pointer");
+        return NULL;
+    }
+
+    if (len == 0)
+    {
+        error("%s", "invalid length");
+        return NULL;
+    }
+
+    memory_chunk *chunk = (memory_chunk *)((uint32_t)ptr - sizeof(memory_chunk));
+
+    // Shrink chunk if needed. No new allocation is required.
+    if (len <= chunk->len)
+    {
+        warn("%s", "cannot shrink chunk");
+        return ptr;
+    }
+
+    void *next_ptr = malloc(len);
+    if (next_ptr == NULL)
+    {
+        return NULL;
+    }
+
+    // Copy data from previous chunk to new chunk.
+    memcpy(next_ptr, ptr, chunk->len);
+
+    // Free previous chunk.
+    free(ptr);
+    return next_ptr;
+}
+
 void free(void *ptr)
 {
     if (!initialized)
     {
+        return;
+    }
+
+    if (ptr == NULL)
+    {
+        error("%s", "invalid pointer");
         return;
     }
 
