@@ -91,6 +91,8 @@ void main(const boot_info *boot_info)
     //     fs_closedir(dir);
     // }
 
+    malloc(0);
+
     while (1)
         ;
 }
