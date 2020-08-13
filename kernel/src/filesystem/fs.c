@@ -4,6 +4,7 @@
 #include "memory/malloc.h"
 #include "drivers/ata.h"
 #include "debug.h"
+#include "assert.h"
 
 #define DRIVERS_LENGTH 256
 
@@ -81,103 +82,49 @@ fs_dir *fs_opendir(string path)
 
 void fs_close(fs_file *file)
 {
-    if (file == NULL)
-    {
-        error("%s", "invalid file");
-        return;
-    }
-
-    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(file);
+    assert(file->driver);
+    assert(file->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     file->driver->close(file);
 }
 
 void fs_closedir(fs_dir *dir)
 {
-    if (dir == NULL)
-    {
-        error("%s", "invalid directory");
-        return;
-    }
-
-    if (dir->driver == NULL || dir->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(dir);
+    assert(dir->driver);
+    assert(dir->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     dir->driver->closedir(dir);
 }
 
 void fs_read(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    if (file == NULL)
-    {
-        error("%s", "invalid file");
-        return;
-    }
-
-    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(file);
+    assert(file->driver);
+    assert(file->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     file->driver->read(file, buffer, len);
 }
 
 void fs_readdir(fs_dir *dir, fs_dirent **entries, uint32_t *len)
 {
-    if (dir == NULL)
-    {
-        error("%s", "invalid directory");
-        return;
-    }
-
-    if (dir->driver == NULL || dir->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(dir);
+    assert(dir->driver);
+    assert(dir->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     dir->driver->readdir(dir, entries, len);
 }
 
 void fs_write(fs_file *file, uint32_t *buffer, uint32_t len)
 {
-    if (file == NULL)
-    {
-        error("%s", "invalid file");
-        return;
-    }
-
-    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(file);
+    assert(file->driver);
+    assert(file->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     file->driver->write(file, buffer, len);
 }
 
 void fs_seek(fs_file *file, uint32_t offset)
 {
-    if (file == NULL)
-    {
-        error("%s", "invalid file");
-        return;
-    }
-
-    if (file->driver == NULL || file->driver->mnt == DRIVER_MOUNT_UNASSIGNED)
-    {
-        error("%s", "cannot find driver");
-        return;
-    }
-
+    assert(file);
+    assert(file->driver);
+    assert(file->driver->mnt != DRIVER_MOUNT_UNASSIGNED);
     file->driver->seek(file, offset);
 }
 

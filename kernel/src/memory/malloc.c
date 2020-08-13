@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include "memory/malloc.h"
 #include "debug.h"
+#include "assert.h"
 
 typedef struct memory_chunk
 {
@@ -19,6 +20,8 @@ static size_t len;
 
 void malloc_init(const memory_map *mmap)
 {
+    assert(mmap);
+
     memory_chunk *current_chunk = NULL;
 
     for (size_t i = 0; i < mmap->len; i++)
@@ -62,15 +65,10 @@ void malloc_init(const memory_map *mmap)
         info("found chunk, base=%x length=%x", (uint32_t)current_chunk, current_chunk->len);
     }
 
-    if (start_chunk == NULL)
-    {
-        error("%s", "cannot find free memory");
-        return;
-    }
-
-    info("initialized, length=%x", len);
+    assert(start_chunk);
 
     initialized = true;
+    info("initialized, length=%x", len);
 }
 
 size_t malloc_deallocated()
@@ -90,16 +88,8 @@ size_t malloc_deallocated()
 
 void *malloc(const uint32_t len)
 {
-    if (!initialized)
-    {
-        return NULL;
-    }
-
-    if (len == 0)
-    {
-        error("%s", "invalid length");
-        return NULL;
-    }
+    assert(initialized);
+    assert(len);
 
     // Find an deallocated chunk that is big enough.
     memory_chunk *current_chunk = NULL;
@@ -113,11 +103,7 @@ void *malloc(const uint32_t len)
         }
     }
 
-    if (current_chunk == NULL)
-    {
-        error("%s", "cannot find chunk");
-        return NULL;
-    }
+    assert(current_chunk);
 
     // Check if the chunk can be split.
     if (current_chunk->len > len + sizeof(memory_chunk))
@@ -142,22 +128,9 @@ void *malloc(const uint32_t len)
 
 void *realloc(void *ptr, const uint32_t len)
 {
-    if (!initialized)
-    {
-        return NULL;
-    }
-
-    if (ptr == NULL)
-    {
-        error("%s", "invalid pointer");
-        return NULL;
-    }
-
-    if (len == 0)
-    {
-        error("%s", "invalid length");
-        return NULL;
-    }
+    assert(initialized);
+    assert(ptr);
+    assert(len);
 
     memory_chunk *chunk = (memory_chunk *)((uint32_t)ptr - sizeof(memory_chunk));
 
@@ -169,10 +142,7 @@ void *realloc(void *ptr, const uint32_t len)
     }
 
     void *next_ptr = malloc(len);
-    if (next_ptr == NULL)
-    {
-        return NULL;
-    }
+    assert(next_ptr);
 
     // Copy data from previous chunk to new chunk.
     memcpy(next_ptr, ptr, chunk->len);
@@ -184,24 +154,11 @@ void *realloc(void *ptr, const uint32_t len)
 
 void free(void *ptr)
 {
-    if (!initialized)
-    {
-        return;
-    }
-
-    if (ptr == NULL)
-    {
-        error("%s", "invalid pointer");
-        return;
-    }
+    assert(initialized);
+    assert(ptr);
 
     memory_chunk *chunk = (memory_chunk *)((uint32_t)ptr - sizeof(memory_chunk));
-
-    if (!chunk->allocated)
-    {
-        error("%s", "cannot deallocate chunk");
-        return;
-    }
+    assert(chunk->allocated);
 
     chunk->allocated = false;
     info("free, length=%x/%x, current=%x", chunk->len, malloc_deallocated(), ptr);
