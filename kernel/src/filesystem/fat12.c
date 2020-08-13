@@ -24,10 +24,30 @@ bool fat12_strcmp(string str1, string str2, size_t len)
     }
     return true;
 }
+
 bool fat12_valid_cluster(uint16_t cluster)
 {
     // Check if cluster is within range of valid cluster values.
     return cluster >= 0x2 && cluster <= 0xFEF;
+}
+
+void fat12_format_file_name(string src, string dest)
+{
+    // Copy name.
+    memcpy(dest, src, FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH);
+    strtrim(dest, ' ');
+
+    // Copy extension.
+    size_t k = strlen(dest);
+    dest[k++] = '.';
+    memcpy(&dest[k], &src[FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH], FAT12_EXTENSION_LENGTH);
+}
+
+void fat12_format_dir_name(string src, string dest)
+{
+    // Copy name.
+    memcpy(dest, src, FAT12_FILENAME_LENGTH);
+    strtrim(dest, ' ');
 }
 
 uint32_t fat12_cluster_lba(uint16_t cluster)
@@ -190,14 +210,8 @@ fs_file *fat12_open(string path)
             file->len = entry->size;
             file->offset = 0;
 
-            // Format file name and extension.
-            memset(file->name, 0, FILE_NAME_LENGTH);
-            memcpy(file->name, entry->filename, FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH);
-            strtrim(file->name, ' ');
-
-            size_t k = strlen(file->name);
-            file->name[k++] = '.';
-            memcpy(&file->name[k], &entry->filename[FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH], FAT12_EXTENSION_LENGTH);
+            memset(file->name, '\0', FILE_NAME_LENGTH);
+            fat12_format_file_name(entry->filename, file->name);
 
             // Deallocate previous buffer.
             free(entries);
@@ -306,10 +320,8 @@ fs_dir *fat12_opendir(string path)
             fs_dir *dir = (fs_dir *)malloc(sizeof(fs_dir));
             dir->ref = (entry->cluster_high << 16) | entry->cluster_low;
 
-            // Format directory name and extension.
-            memset(dir->name, 0, FILE_NAME_LENGTH);
-            memcpy(dir->name, entry->filename, FAT12_FILENAME_LENGTH);
-            strtrim(dir->name, ' ');
+            memset(dir->name, '\0', FILE_NAME_LENGTH);
+            fat12_format_dir_name(entry->filename, dir->name);
 
             // Deallocate previous buffer.
             free(entries);
@@ -458,8 +470,8 @@ void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __a
     size_t entries_len;
     fat12_read_directory(&entries, &entries_len, dir->ref);
 
-    // Compute buffer size.
-    size_t dirents_len = 0;
+    *dirents = NULL;
+
     for (size_t i = 0; i < entries_len; i++)
     {
         if (entries[i].attributes != FAT12_ATTRIBUTE_DIRECTORY &&
@@ -474,22 +486,39 @@ void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __a
             continue;
         }
 
-        dirents_len++;
+        // Allocate buffer for each directory entry.
+        if (*dirents == NULL)
+        {
+            *dirents = (fs_dirent *)malloc(sizeof(fs_dirent));
+        }
+        else
+        {
+            *dirents = (fs_dirent *)realloc(*dirents, ((*len) + 1) * sizeof(fs_dirent));
+        }
+
+        // Create entry depending on attributes.
+        fs_dirent* dirent = &(*dirents)[(*len)];
+        switch (entries[i].attributes)
+        {
+        case FAT12_ATTRIBUTE_ARCHIVE:
+            memset(dirent->name, '\0', FILE_NAME_LENGTH);
+            fat12_format_file_name(entries[i].filename, dirent->name);
+
+            dirent->type = DIRECTORY_ENTRY_TYPE_FILE;
+            break;
+        case FAT12_ATTRIBUTE_DIRECTORY:
+            memset(dirent->name, '\0', FILE_NAME_LENGTH);
+            fat12_format_dir_name(entries[i].filename, dirent->name);
+
+            dirent->type = DIRECTORY_ENTRY_TYPE_DIRECTORY;
+            break;
+
+        default:
+            break;
+        }
+
+        (*len)++;
     }
-
-    debug("%d", dirents_len);
-
-    // debug("%s", entries[i].filename);
-
-    // *entries_ = (fs_dirent *)malloc((*len) * sizeof(fs_dirent));
-    // for (size_t i = 0; i < *len; i++)
-    // {
-    //     if (entries[i].attributes == FAT12_ATTRIBUTE_DIRECTORY ||
-    //         entries[i].attributes == FAT12_ATTRIBUTE_ARCHIVE)
-    //     {
-    //         (*entries_)[i].name = "test";
-    //     }
-    // }
 }
 
 void fat12_write(fs_file *file, uint32_t *buffer, uint32_t len)
