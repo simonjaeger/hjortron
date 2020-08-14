@@ -67,6 +67,8 @@ ISR_DEFAULT     45  ; FPU.
 ISR_DEFAULT     46  ; Primary ATA HDD.
 ISR_DEFAULT     47  ; Secondary ATA HDD.
 
+ISR_DEFAULT     128  ; System call.
+
 isr_common:
     ; Push state.
     pushad

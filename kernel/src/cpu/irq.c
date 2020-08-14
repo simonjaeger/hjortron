@@ -56,6 +56,8 @@ extern void isr45();
 extern void isr46();
 extern void isr47();
 
+extern void isr128();
+
 extern void isr_ignore();
 
 extern void irq_handler(const regs *r)
@@ -126,6 +128,8 @@ void irq_init()
     init_idt_entry(&entries[45], segment, isr45, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[46], segment, isr46, 0, IDT_GATE_TYPE_INTERRUPT_32);
     init_idt_entry(&entries[47], segment, isr47, 0, IDT_GATE_TYPE_INTERRUPT_32);
+
+    init_idt_entry(&entries[128], segment, isr128, 0, IDT_GATE_TYPE_INTERRUPT_32);
 
     // Load interrupt descriptor table register.
     idt idtr;

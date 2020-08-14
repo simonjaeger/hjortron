@@ -19,6 +19,7 @@
 #include "filesystem/fat12.h"
 #include "filesystem/elf.h"
 #include "assert.h"
+#include "syscall.h"
 
 void main(const boot_info *boot_info)
 {
@@ -38,6 +39,8 @@ void main(const boot_info *boot_info)
     pic_init();
     irq_enable();
 
+    syscall_init();
+
     // Initialize drivers.
     pit_init();
     keyboard_init();
@@ -49,27 +52,28 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
-    // Test ELF load.
-    fs_file *file = fs_open("/H/APPS/TEST.ELF");
-    if (file == NULL)
-    {
-        printf("Could not open TEST.ELF.");
-    }
-    else
-    {
-        // Read file.
-        void *elf_buffer;
-        uint32_t elf_entry;
-        elf_read(file, &elf_buffer, &elf_entry);
-        __attribute__((unused)) uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
+    // // Test ELF load.
+    // fs_file *file = fs_open("/H/APPS/TEST.ELF");
+    // if (file == NULL)
+    // {
+    //     printf("Could not open TEST.ELF.");
+    // }
+    // else
+    // {
+    //     // Read file.
+    //     void *elf_buffer;
+    //     uint32_t elf_entry;
+    //     elf_read(file, &elf_buffer, &elf_entry);
+    //     __attribute__((unused)) uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
 
-        // Close file.
-        fs_close(file);
+    //     // Close file.
+    //     fs_close(file);
 
-        // Run file.
-        // elf_main();
-    }
+    //     // Run file.
+    //     // elf_main();
+    // }
 
+    // // Test readdir.
     // fs_dir *dir = fs_opendir("/H/APPS");
     // if (dir == NULL)
     // {
@@ -91,7 +95,10 @@ void main(const boot_info *boot_info)
     //     fs_closedir(dir);
     // }
 
-    malloc(0);
+    // // Test syscall.
+    // uint32_t test;
+    // asm volatile("int $0x80" ::"a"(1), "b"(&test));
+    // debug("%x", test);
 
     while (1)
         ;
