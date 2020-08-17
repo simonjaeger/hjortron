@@ -20,6 +20,7 @@
 #include "filesystem/elf.h"
 #include "assert.h"
 #include "syscall.h"
+#include "scheduler.h"
 
 void main(const boot_info *boot_info)
 {
@@ -40,6 +41,7 @@ void main(const boot_info *boot_info)
     irq_enable();
 
     syscall_init();
+    scheduler_init();
 
     // Initialize drivers.
     pit_init();
