@@ -5,7 +5,7 @@
 
 typedef struct thread
 {
-    uint32_t idx;
+    uint32_t id;
     uint32_t *esp;
     uint32_t *ebp;
     uint32_t *eip;

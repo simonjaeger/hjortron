@@ -13,6 +13,7 @@
 
 static thread *threads[MAX_THREADS];
 static thread *current;
+static uint32_t next_id;
 
 void sleep()
 {
@@ -57,21 +58,20 @@ thread *task_create(uint32_t *eip)
         {
             threads[i] = (thread *)malloc(sizeof(thread));
             t = threads[i];
-            t->idx = i;
             break;
         }
     }
 
     assert(t);
 
-    t->eip = eip;
-
     // Allocate stack.
     uint8_t *stack = (uint8_t *)malloc(THREAD_STACK_LENGTH);
     assert(stack);
 
+    t->id = next_id;
     t->ebp = (uint32_t *)(stack + THREAD_STACK_LENGTH);
     t->esp = (uint32_t *)(stack + THREAD_STACK_LENGTH - sizeof(regs));
+    t->eip = eip;
 
     // Create stack.
     regs *r = (regs *)t->esp;
@@ -113,15 +113,13 @@ void scheduler_init()
     }
 
     current = NULL;
+    next_id = 0;
 
     // TODO: Remove.
     thread *t1 = task_create((uint32_t *)&task1);
     thread *t2 = task_create((uint32_t *)&task2);
 
     info("%s", "initialized");
-
-    debug("ADDR1 %x %x", t1->esp, t2->esp);
-    debug("ADDR2 %x %x", &task1, &task2);
 }
 
 void scheduler_schedule(regs *r)
@@ -131,63 +129,22 @@ void scheduler_schedule(regs *r)
 
     if (current == NULL)
     {
-        debug("TEST: %x %x", r->ebp, r->esp);
-
-        current = threads[0];
-
-        // r->ebp = (uint32_t)current->ebp;
-        // r->esp = (uint32_t)current->esp;
-        // r->eip = (uint32_t)current->eip;
-
-        asm volatile("mov %%eax, %%ebp" ::"a"((uint32_t)current->ebp));
-        asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
-        asm volatile("jmp scheduler_iret");
-
-        // uint32_t t = 0;
-        // asm volatile("mov %%esp, %%eax"
-        //              : "=a"(t));
-        // debug("TEST3: %x %x %x", t, r, (uint32_t)r - t);
-
-        // asm volatile("pop %gs");
-        // asm volatile("pop %fs");
-        // asm volatile("pop %es");
-        // asm volatile("pop %ds");
-
-        // asm volatile("popad");
-
-        // asm volatile("add esp, $8");
-        // asm volatile("pop %ebp");
-        // asm volatile("pop %esp");
-
-        // asm volatile("pop %esp");
-
-        return;
-    }
-
-    current->esp = (uint32_t *)r;
-
-    // debug("TEST2 %x %x %x", current->idx, current->esp, r->esp);
-    debug("%x %x", current->esp, (uint32_t *)r->esp);
-
-    // // // current->ebp = (uint32_t *)r->ebp;
-    // // // current->eip = (uint32_t *)r->eip;
-
-    if (current == threads[1])
-    {
         current = threads[0];
     }
     else
     {
-        current = threads[1];
+        current->esp = (uint32_t *)r;
+
+        if (current == threads[1])
+        {
+            current = threads[0];
+        }
+        else
+        {
+            current = threads[1];
+        }
     }
 
-    asm volatile("mov %%eax, %%ebp" ::"a"((uint32_t)current->ebp));
     asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
     asm volatile("jmp scheduler_iret");
-
-    // // debug("te %d %x", current->idx, current->esp);
-
-    // // // r->ebp = (uint32_t)current->ebp;
-    // r->esp = (uint32_t)current->esp;
-    // // // r->eip = (uint32_t)current->eip;
 }
