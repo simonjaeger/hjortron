@@ -88,6 +88,9 @@ isr_common:
 
     ; Restore state.
     pop eax
+
+global isr_restore
+isr_restore:
     pop gs
     pop fs
     pop es
@@ -95,6 +98,6 @@ isr_common:
     popad
     add esp, 8
 
-global isr_ignore 
+global isr_ignore
 isr_ignore:
     iret

@@ -17,9 +17,11 @@
 #include "cpu/exceptions.h"
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
-#include "filesystem/elf.h"
 #include "assert.h"
-#include "syscall.h"
+#include "execution/syscall.h"
+#include "execution/elf.h"
+#include "execution/scheduler.h"
+#include "list.h"
 
 void main(const boot_info *boot_info)
 {
@@ -31,6 +33,7 @@ void main(const boot_info *boot_info)
     cpuid_info(&boot_info->cpuid);
     mmap_info(&boot_info->memory_map);
 
+    // Initialize dynamic memory.
     malloc_init(&boot_info->memory_map);
 
     // Initialize IRQ's.
@@ -38,8 +41,8 @@ void main(const boot_info *boot_info)
     irq_init();
     pic_init();
     irq_enable();
-
     syscall_init();
+    scheduler_init();
 
     // Initialize drivers.
     pit_init();
@@ -51,6 +54,9 @@ void main(const boot_info *boot_info)
     // TODO: Skip if there is no disk on primary ATA bus.
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
+
+    // Enable scheduler.
+    scheduler_enable();
 
     // // Test ELF load.
     // fs_file *file = fs_open("/H/APPS/TEST.ELF");
