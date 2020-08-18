@@ -21,6 +21,7 @@
 #include "assert.h"
 #include "syscall.h"
 #include "scheduler.h"
+#include "list.h"
 
 void main(const boot_info *boot_info)
 {
@@ -39,6 +40,13 @@ void main(const boot_info *boot_info)
     irq_init();
     pic_init();
     irq_enable();
+
+    uint32_t *u1 = (uint32_t *)malloc(sizeof(uint32_t));
+    uint32_t *u2 = (uint32_t *)malloc(sizeof(uint32_t));
+    uint32_t *u3 = (uint32_t *)malloc(sizeof(uint32_t));
+    *u1 = 1;
+    *u2 = 2;
+    *u3 = 3;
 
     syscall_init();
     scheduler_init();
