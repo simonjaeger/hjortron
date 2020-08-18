@@ -19,7 +19,7 @@ process_t *process_create(uint32_t *eip)
     uint8_t *stack = (uint8_t *)malloc(PROCESS_STACK_LENGTH);
     assert(stack);
 
-    process->id = next_id;
+    process->id = next_id++;
     process->ebp = (uint32_t *)(stack + PROCESS_STACK_LENGTH);
     process->esp = (uint32_t *)(stack + PROCESS_STACK_LENGTH - sizeof(regs));
     process->eip = eip;

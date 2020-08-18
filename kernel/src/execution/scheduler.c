@@ -14,56 +14,11 @@ static process_t *current;
 static bool enabled;
 static uint32_t *esp;
 
-void sleep()
-{
-    for (size_t i = 0; i < 10000000; i++)
-    {
-        if (1 + 1)
-        {
-            continue;
-        }
-    }
-}
-
-void task1()
-{
-    size_t i = 0;
-    while (true)
-    {
-        printf("%da ", i++);
-        sleep();
-
-        if (i > 25)
-        {
-            asm volatile("int $0x80" ::"a"(SYSCALL_KILL), "b"(0));
-        }
-    }
-}
-
-void task2()
-{
-    size_t i = 0;
-    while (true)
-    {
-        printf("%db ", i++);
-        sleep();
-
-        if (i > 50)
-        {
-            asm volatile("int $0x80" ::"a"(SYSCALL_KILL), "b"(0));
-        }
-    }
-}
-
 void scheduler_init(void)
 {
     list = list_create();
     current = NULL;
     enabled = false;
-
-    list_insert(list, process_create((uint32_t *)&task1));
-    list_insert(list, process_create((uint32_t *)&task2));
-
     info("%s", "initialized");
 }
 
@@ -142,15 +97,7 @@ void scheduler_kill(process_t *process)
 
     list_delete(list, process);
     process_destroy(process);
-    info("%s", "kill");
-
-    // if (list->length == 0)
-    // {
-    //     debug("%s %x", "wut?", test_esp);
-    //     current = NULL;
-    //     asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)test_esp));
-    //     return;
-    // }
+    info("kill, id=%d", process->id);
 
     // Select a new process if the current one is
     // being killed.

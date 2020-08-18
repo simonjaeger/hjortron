@@ -33,6 +33,7 @@ void main(const boot_info *boot_info)
     cpuid_info(&boot_info->cpuid);
     mmap_info(&boot_info->memory_map);
 
+    // Initialize dynamic memory.
     malloc_init(&boot_info->memory_map);
 
     // Initialize IRQ's.
@@ -40,14 +41,6 @@ void main(const boot_info *boot_info)
     irq_init();
     pic_init();
     irq_enable();
-
-    uint32_t *u1 = (uint32_t *)malloc(sizeof(uint32_t));
-    uint32_t *u2 = (uint32_t *)malloc(sizeof(uint32_t));
-    uint32_t *u3 = (uint32_t *)malloc(sizeof(uint32_t));
-    *u1 = 1;
-    *u2 = 2;
-    *u3 = 3;
-
     syscall_init();
     scheduler_init();
 
@@ -62,6 +55,7 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
+    // Enable scheduler.
     scheduler_enable();
 
     // // Test ELF load.

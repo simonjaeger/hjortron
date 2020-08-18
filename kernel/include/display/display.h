@@ -14,6 +14,8 @@ void display_init();
 void display_destroy();
 void display_clear();
 
+size_t *display_cursor();
+
 void putc(const char c);
 void puts(string str);
 
