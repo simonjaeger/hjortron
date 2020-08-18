@@ -1,10 +1,10 @@
 #include <stdint.h>
-#include "syscall.h"
+#include "execution/syscall.h"
+#include "execution/scheduler.h"
 #include "cpu/irq.h"
 #include "assert.h"
 #include "debug.h"
 #include "filesystem/fs.h"
-#include "execution/scheduler.h"
 
 void syscall_handle_irq(const regs *r)
 {

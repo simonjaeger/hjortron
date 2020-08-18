@@ -18,7 +18,7 @@
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
 #include "assert.h"
-#include "syscall.h"
+#include "execution/syscall.h"
 #include "execution/elf.h"
 #include "execution/scheduler.h"
 #include "list.h"

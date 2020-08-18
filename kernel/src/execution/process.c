@@ -65,5 +65,6 @@ void process_destroy(process_t *process)
 {
     assert(process);
 
+    free((uint8_t*)process->ebp - PROCESS_STACK_LENGTH);
     free(process);
 }
