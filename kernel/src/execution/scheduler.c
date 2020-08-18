@@ -9,6 +9,7 @@
 
 static list_t *list;
 static process_t *current;
+static bool enabled;
 
 void sleep()
 {
@@ -45,6 +46,7 @@ void scheduler_init()
 {
     list = list_create();
     current = NULL;
+    enabled = false;
 
     list_insert(list, process_create((uint32_t *)&task1));
     list_insert(list, process_create((uint32_t *)&task2));
@@ -57,6 +59,11 @@ extern void *scheduler_iret;
 void scheduler_handle_irq(regs *r)
 {
     assert(r);
+
+    if (!enabled)
+    {
+        return;
+    }
 
     if (current == NULL)
     {
@@ -82,4 +89,16 @@ void scheduler_handle_irq(regs *r)
     // Set esp and resume execution.
     asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
     asm volatile("jmp isr_restore");
+}
+
+void scheduler_enable(void)
+{
+    enabled = true;
+    info("%s", "enabled");
+}
+
+void scheduler_disable(void)
+{
+    enabled = false;
+    info("%s", "disabled");
 }

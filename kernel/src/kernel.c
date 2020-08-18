@@ -62,6 +62,8 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
+    scheduler_enable();
+
     // // Test ELF load.
     // fs_file *file = fs_open("/H/APPS/TEST.ELF");
     // if (file == NULL)
