@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "list.h"
 #include "execution/process.h"
+#include "syscall.h"
 
 static list_t *list;
 static process_t *current;
@@ -29,6 +30,11 @@ void task1()
     {
         printf("%da ", i++);
         sleep();
+
+        if (i > 25)
+        {
+            asm volatile("int $0x80" ::"a"(SYSCALL_KILL), "b"(0));
+        }
     }
 }
 
@@ -39,10 +45,15 @@ void task2()
     {
         printf("%db ", i++);
         sleep();
+
+        if (i > 50)
+        {
+            asm volatile("int $0x80" ::"a"(SYSCALL_KILL), "b"(0));
+        }
     }
 }
 
-void scheduler_init()
+void scheduler_init(void)
 {
     list = list_create();
     current = NULL;
@@ -54,7 +65,12 @@ void scheduler_init()
     info("%s", "initialized");
 }
 
-extern void *scheduler_iret;
+void scheduler_switch()
+{
+    // Switch stack and resume execution.
+    asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
+    asm volatile("jmp isr_restore");
+}
 
 void scheduler_handle_irq(regs *r)
 {
@@ -65,13 +81,19 @@ void scheduler_handle_irq(regs *r)
         return;
     }
 
+    if (list->length == 0)
+    {
+        // TODO: Return to kernel stack.
+        return;
+    }
+
     if (current == NULL)
     {
         current = list->head->value;
     }
     else
     {
-        // Save current esp.
+        // Save stack.
         current->esp = (uint32_t *)r;
 
         // Select next process.
@@ -86,9 +108,7 @@ void scheduler_handle_irq(regs *r)
         }
     }
 
-    // Set esp and resume execution.
-    asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
-    asm volatile("jmp isr_restore");
+    scheduler_switch();
 }
 
 void scheduler_enable(void)
@@ -101,4 +121,26 @@ void scheduler_disable(void)
 {
     enabled = false;
     info("%s", "disabled");
+}
+
+process_t *scheduler_process(void)
+{
+    return current;
+}
+
+void scheduler_kill(process_t *process)
+{
+    assert(process);
+
+    list_delete(list, process);
+
+    // Select a new process if the current one is 
+    // being killed.
+    if (current == process)
+    {
+        current = list->head->value;
+
+        info("%s", "kill");
+        scheduler_switch();
+    }
 }
