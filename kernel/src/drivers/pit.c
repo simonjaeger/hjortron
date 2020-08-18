@@ -3,7 +3,7 @@
 #include "drivers/pit.h"
 #include "cpu/io.h"
 #include "cpu/irq.h"
-#include "scheduler.h"
+#include "execution/scheduler.h"
 #include "debug.h"
 
 #define PIT_CHANNEL0_DATA 0x40
@@ -16,10 +16,10 @@
 
 static size_t ticks = 0;
 
-void pit_handle_irq(const regs* r)
+void pit_handle_irq(const regs *r)
 {
     ticks++;
-    scheduler_schedule(r);
+    scheduler_handle_irq((regs *)r);
 }
 
 void pit_init()

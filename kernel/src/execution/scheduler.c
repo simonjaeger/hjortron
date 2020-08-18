@@ -1,6 +1,5 @@
 #include <stdbool.h>
-#include "scheduler.h"
-#include "cpu/irq.h"
+#include "execution/scheduler.h"
 #include "memory/malloc.h"
 #include "display/display.h"
 #include "debug.h"
@@ -53,7 +52,9 @@ void scheduler_init()
     info("%s", "initialized");
 }
 
-void scheduler_schedule(regs *r)
+extern void *scheduler_iret;
+
+void scheduler_handle_irq(regs *r)
 {
     assert(r);
 
@@ -63,8 +64,10 @@ void scheduler_schedule(regs *r)
     }
     else
     {
+        // Save current esp.
         current->esp = (uint32_t *)r;
 
+        // Select next process.
         node_t *node = list_find(list, current);
         if (node->next == NULL)
         {
@@ -76,6 +79,7 @@ void scheduler_schedule(regs *r)
         }
     }
 
+    // Set esp and resume execution.
     asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
-    asm volatile("jmp scheduler_iret");
+    asm volatile("jmp isr_restore");
 }

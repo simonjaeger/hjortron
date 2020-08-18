@@ -20,7 +20,7 @@
 #include "filesystem/elf.h"
 #include "assert.h"
 #include "syscall.h"
-#include "scheduler.h"
+#include "execution/scheduler.h"
 #include "list.h"
 
 void main(const boot_info *boot_info)
