@@ -17,9 +17,9 @@
 #include "cpu/exceptions.h"
 #include "filesystem/fs.h"
 #include "filesystem/fat12.h"
-#include "filesystem/elf.h"
 #include "assert.h"
 #include "syscall.h"
+#include "execution/elf.h"
 #include "execution/scheduler.h"
 #include "list.h"
 
