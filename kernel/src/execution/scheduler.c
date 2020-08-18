@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "list.h"
 #include "execution/process.h"
+#include "execution/mutex.h"
 #include "syscall.h"
 
 static list_t *list;
@@ -46,7 +47,7 @@ void task2()
         printf("%db ", i++);
         sleep();
 
-        if (i > 50)
+        if (i > 25)
         {
             asm volatile("int $0x80" ::"a"(SYSCALL_KILL), "b"(0));
         }
@@ -134,7 +135,7 @@ void scheduler_kill(process_t *process)
 
     list_delete(list, process);
 
-    // Select a new process if the current one is 
+    // Select a new process if the current one is
     // being killed.
     if (current == process)
     {
