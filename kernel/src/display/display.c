@@ -50,11 +50,6 @@ void display_clear()
     cursor = 0;
 }
 
-size_t *display_cursor()
-{
-    return &cursor;
-}
-
 void display_update_cursor()
 {
     // Shift buffer if needed to show the next row.
