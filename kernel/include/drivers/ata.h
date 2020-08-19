@@ -28,7 +28,7 @@ typedef struct ata_identify_device_data
     uint16_t obsolete5;
     uint8_t firmware_revision[8];
     uint8_t model_number[40];
-    // TODO: ...
+    /* TODO: ... */
 } ata_identify_device_data;
 
 #define ATA_BUS_PRIMARY 0x1F0

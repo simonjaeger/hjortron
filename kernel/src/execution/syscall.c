@@ -13,7 +13,7 @@ void syscall_handle_irq(const regs *r)
 
     process_t *process = scheduler_process();
 
-    // Type of syscall.
+    /* Type of syscall. */
     switch (r->eax)
     {
     case SYSCALL_STOP:

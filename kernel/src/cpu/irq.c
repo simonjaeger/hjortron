@@ -72,7 +72,7 @@ extern void irq_handler(const regs *r)
 
 void irq_init()
 {
-    // By default every interrupt is initialized but ignored.
+    /* By default every interrupt is initialized but ignored. */
     uint16_t segment = 0x08;
     for (size_t i = 0; i < IDT_SIZE; i++)
     {
@@ -131,7 +131,7 @@ void irq_init()
 
     init_idt_entry(&entries[128], segment, isr128, 0, IDT_GATE_TYPE_INTERRUPT_32);
 
-    // Load interrupt descriptor table register.
+    /* Load interrupt descriptor table register. */
     idt idtr;
     idtr.size = IDT_SIZE * sizeof(idt_entry) - 1;
     idtr.entries = &entries[0];
@@ -144,27 +144,23 @@ void irq_init()
 void irq_enable()
 {
     asm("sti");
-
     info("%s", "enabled");
 }
 
 void irq_disable()
 {
     asm("cli");
-
     info("%s", "disabled");
 }
 
 void irq_init_handler(uint8_t irq, void (*handler)(const regs *r))
 {
     handlers[irq] = handler;
-
     info("initialized handler, irq=%x, handler=%lx", irq, (uint32_t)handler);
 }
 
 void irq_terminate_handler(uint8_t irq)
 {
     handlers[irq] = NULL;
-
     info("terminated handler, irq=%x", irq);
 }

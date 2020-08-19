@@ -12,7 +12,7 @@ static fs_driver *drivers[DRIVERS_LENGTH];
 
 fs_file *fs_open(string path)
 {
-    // Check mount format.
+    /* Check mount format. */
     if (path[0] != '/' || path[2] != '/')
     {
         error("%s", "invalid path");
@@ -27,7 +27,7 @@ fs_file *fs_open(string path)
             break;
         }
 
-        // Check for correct driver.
+        /* Check for correct driver. */
         if (drivers[i]->mnt != path[0])
         {
             continue;
@@ -35,7 +35,7 @@ fs_file *fs_open(string path)
 
         path += 2;
 
-        // Open file and assign driver.
+        /* Open file and assign driver. */
         fs_file *file = drivers[i]->open(path);
         file->driver = drivers[i];
         return file;
@@ -47,7 +47,7 @@ fs_file *fs_open(string path)
 
 fs_dir *fs_opendir(string path)
 {
-    // Check mount format.
+    /* Check mount format. */
     if (path[0] != '/' || path[2] != '/')
     {
         error("%s", "invalid path");
@@ -62,7 +62,7 @@ fs_dir *fs_opendir(string path)
             break;
         }
 
-        // Check for correct driver.
+        /* Check for correct driver. */
         if (drivers[i]->mnt != path[0])
         {
             continue;
@@ -70,7 +70,7 @@ fs_dir *fs_opendir(string path)
 
         path += 2;
 
-        // Open directory and assign driver.
+        /* Open directory and assign driver. */
         fs_dir *dir = drivers[i]->opendir(path);
         dir->driver = drivers[i];
         return dir;

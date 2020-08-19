@@ -15,7 +15,7 @@ void strset(string str, char c, size_t len);
 
 string reverse(string str, size_t i, size_t j);
 
-// void atoi(string str, int *i);
+/* void atoi(string str, int *i); */
 string itoa(int32_t i, string str, size_t base);
 
 void sprintf(string str, string format, ...);

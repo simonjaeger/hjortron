@@ -15,7 +15,7 @@ process_t *process_create(uint32_t *eip)
     process_t *process = (process_t *)malloc(sizeof(process_t));
     assert(process);
 
-    // Allocate stack.
+    /* Allocate stack. */
     uint8_t *stack = (uint8_t *)malloc(PROCESS_STACK_LENGTH);
     assert(stack);
 
@@ -26,10 +26,10 @@ process_t *process_create(uint32_t *eip)
     process->state = PROCESS_STATE_WAITING;
     process->sleep = 0;
 
-    // Create stack.
+    /* Create stack. */
     regs *r = (regs *)process->esp;
 
-    // TODO: Get from GDT.
+    /* TODO: Get from GDT. */
     r->gs = 0x10;
     r->fs = 0x10;
     r->es = 0x10;
@@ -51,10 +51,10 @@ process_t *process_create(uint32_t *eip)
 
     r->eip = (uint32_t)process->eip;
     
-    // TODO: Get from GDT.
+    /* TODO: Get from GDT. */
     r->cs = 0x8;
 
-    // TODO: Confirm.
+    /* TODO: Confirm. */
     r->eflags = 0x206;
     r->useresp = 0;
     r->ss = 0;

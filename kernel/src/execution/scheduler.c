@@ -39,7 +39,7 @@ process_t *scheduler_next()
             node = list->head;
         }
 
-        // Check if process is waiting.
+        /* Check if process is waiting. */
         if (((process_t *)node->value)->state == PROCESS_STATE_WAITING)
         {
             return node->value;
@@ -50,10 +50,10 @@ process_t *scheduler_next()
 
 void scheduler_switch()
 {
-    // Select next process.
+    /* Select next process. */
     current = scheduler_next();
 
-    // Switch stack and resume execution.
+    /* Switch stack and resume execution. */
     if (current == NULL)
     {
         assert(esp);
@@ -76,7 +76,7 @@ void scheduler_handle_irq(const regs *r)
         return;
     }
 
-    // Decrement sleep counters.
+    /* Decrement sleep counters. */
     for (node_t *node = list->head; node != NULL; node = node->next)
     {
         process_t *process = (process_t *)node->value;
@@ -94,13 +94,15 @@ void scheduler_handle_irq(const regs *r)
 
     if (current == NULL)
     {
-        // Save kernel stack so that it can be restored
-        // when there are no running processes.
+        /* 
+         * Save kernel stack so that it can be restored
+         * when there are no running processes.
+         */
         esp = (uint32_t *)r;
     }
     else
     {
-        // Save process stack.
+        /* Save process stack. */
         current->esp = (uint32_t *)r;
         current->state = PROCESS_STATE_WAITING;
     }
@@ -152,18 +154,20 @@ void scheduler_sleep(process_t *process, size_t ms, const regs *r)
 {
     assert(process);
 
-    // Compute ticks based on PIT configuration as scheduler
-    // is dependent on PIT interrupts.
-    size_t ticks = ms * PIT_INTERRUPTS_PER_SECOND / 1000;
+    info("sleep, id=%d, ms=%d", process->id, ms);
 
-    info("sleep, id=%d, ticks=%d", process->id, ticks);
+    /* 
+     * Compute ticks based on PIT configuration as scheduler
+     * is dependent on PIT interrupts.
+     */
+    size_t ticks = ms * PIT_INTERRUPTS_PER_SECOND / 1000;
 
     process->state = PROCESS_STATE_SLEEPING;
     process->sleep = ticks;
 
     if (current == process)
     {
-        // Save process stack.
+        /* Save process stack. */
         current->esp = (uint32_t *)r;
 
         current = NULL;

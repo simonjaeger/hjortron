@@ -4,8 +4,8 @@
 #include "memory/malloc.h"
 #include "debug.h"
 
-// TODO: Move to driver specific metadata.
-// TODO: Support ATA_BUS_SECONDARY.
+/* TODO: Move to driver specific metadata. */
+/* TODO: Support ATA_BUS_SECONDARY. */
 
 static fat12_extended_bios_parameter_block *bpb;
 static size_t lba_fat1;
@@ -27,17 +27,17 @@ bool fat12_strcmp(string str1, string str2, size_t len)
 
 bool fat12_valid_cluster(uint16_t cluster)
 {
-    // Check if cluster is within range of valid cluster values.
+    /* Check if cluster is within range of valid cluster values. */
     return cluster >= 0x2 && cluster <= 0xFEF;
 }
 
 void fat12_format_file_name(string src, string dest)
 {
-    // Copy name.
+    /* Copy name. */
     memcpy(dest, src, FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH);
     strtrim(dest, ' ');
 
-    // Copy extension.
+    /* Copy extension. */
     size_t k = strlen(dest);
     dest[k++] = '.';
     memcpy(&dest[k], &src[FAT12_FILENAME_LENGTH - FAT12_EXTENSION_LENGTH], FAT12_EXTENSION_LENGTH);
@@ -45,14 +45,14 @@ void fat12_format_file_name(string src, string dest)
 
 void fat12_format_dir_name(string src, string dest)
 {
-    // Copy name.
+    /* Copy name. */
     memcpy(dest, src, FAT12_FILENAME_LENGTH);
     strtrim(dest, ' ');
 }
 
 uint32_t fat12_cluster_lba(uint16_t cluster)
 {
-    // Compute LBA.
+    /* Compute LBA. */
     uint32_t lba_offset = cluster;
     lba_offset -= 2;
     lba_offset *= bpb->sectors_per_cluster;
@@ -61,23 +61,23 @@ uint32_t fat12_cluster_lba(uint16_t cluster)
 
 uint16_t fat12_read_fat(uint16_t cluster)
 {
-    // Compute offsets.
+    /* Compute offsets. */
     size_t byte_offset = cluster + cluster / 2;
     size_t lba_offset = byte_offset / bpb->bytes_per_sector;
     size_t sector_offset = byte_offset % bpb->bytes_per_sector;
 
-    // Read sector.
+    /* Read sector. */
     uint8_t *buffer = (uint8_t *)malloc(bpb->bytes_per_sector);
     ata_read((uint16_t *)buffer, ata_bus, lba_fat1 + lba_offset, 1);
 
-    // TODO: Cache buffer.
+    /* TODO: Cache buffer. */
 
-    // Get next cluster and deallocate buffer.
+    /* Get next cluster and deallocate buffer. */
     uint16_t next_cluster = ((uint16_t *)(&buffer[sector_offset]))[0];
 
     free(buffer);
 
-    // Remove 4 bits from the value that belong to another cluster.
+    /* Remove 4 bits from the value that belong to another cluster. */
     if (cluster & 1)
     {
         return next_cluster >> 4;
@@ -96,15 +96,15 @@ void fat12_read_cluster_chain(uint8_t **buffer, size_t *len, uint16_t cluster)
             break;
         }
 
-        // Get next cluster.
+        /* Get next cluster. */
         clusters[(*len)++] = cluster;
         cluster = fat12_read_fat(cluster);
     }
 
-    // Allocate buffer for chain.
+    /* Allocate buffer for chain. */
     *buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster * *len);
 
-    // Read clusters.
+    /* Read clusters. */
     for (size_t i = 0; i < *len; i++)
     {
         uint32_t lba = fat12_cluster_lba(clusters[i]);
@@ -114,7 +114,7 @@ void fat12_read_cluster_chain(uint8_t **buffer, size_t *len, uint16_t cluster)
 
 void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t cluster)
 {
-    // Read root directory, consecutive sectors.
+    /* Read root directory, consecutive sectors. */
     if (!cluster)
     {
         uint32_t *buffer = (uint32_t *)malloc(bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE);
@@ -124,7 +124,7 @@ void fat12_read_directory(fat12_directory_entry **entries, size_t *len, uint16_t
         return;
     }
 
-    // Read chain of clusters for directory.
+    /* Read chain of clusters for directory. */
     size_t chain_len = 0;
     fat12_read_cluster_chain((uint8_t **)entries, &chain_len, cluster);
     *len = chain_len * bpb->sectors_per_cluster * bpb->bytes_per_sector / FAT12_DIRECTORY_ENTRY_SIZE;
@@ -134,7 +134,7 @@ fs_file *fat12_open(string path)
 {
     info("open, path=%s", path);
 
-    // Read root directory.
+    /* Read root directory. */
     fat12_directory_entry *entries;
     size_t entries_len;
     fat12_read_directory(&entries, &entries_len, 0);
@@ -154,7 +154,7 @@ fs_file *fat12_open(string path)
                 return NULL;
             }
 
-            // Find extension.
+            /* Find extension. */
             char ext[FAT12_EXTENSION_LENGTH];
             memset(ext, 0, FAT12_EXTENSION_LENGTH);
 
@@ -185,7 +185,7 @@ fs_file *fat12_open(string path)
                 return NULL;
             }
 
-            // Find file within directory.
+            /* Find file within directory. */
             fat12_directory_entry *entry = NULL;
             for (size_t k = 0; k < entries_len; k++)
             {
@@ -197,14 +197,14 @@ fs_file *fat12_open(string path)
                 }
             }
 
-            // Check if the file was found.
+            /* Check if the file was found. */
             if (entry == NULL)
             {
                 warn("%s", "cannot find file");
                 return NULL;
             }
 
-            // Create file.
+            /* Create file. */
             fs_file *file = (fs_file *)malloc(sizeof(fs_file));
             file->ref = (entry->cluster_high << 16) | entry->cluster_low;
             file->len = entry->size;
@@ -213,13 +213,13 @@ fs_file *fat12_open(string path)
             memset(file->name, '\0', FILE_NAME_LENGTH);
             fat12_format_file_name(entry->filename, file->name);
 
-            // Deallocate previous buffer.
+            /* Deallocate previous buffer. */
             free(entries);
             return file;
         }
         else if (path[j] == '/')
         {
-            // Find directory within directory.
+            /* Find directory within directory. */
             fat12_directory_entry *entry = NULL;
             for (size_t i = 0; i < entries_len; i++)
             {
@@ -231,21 +231,21 @@ fs_file *fat12_open(string path)
                 }
             }
 
-            // Check if the directory was found.
+            /* Check if the directory was found. */
             if (entry == NULL)
             {
                 error("%s", "cannot find directory");
                 return NULL;
             }
 
-            // Compute cluster and deallocate previous buffer.
+            /* Compute cluster and deallocate previous buffer. */
             uint16_t cluster = (entry->cluster_high << 16) | entry->cluster_low;
             free(entries);
 
-            // Read directory.
+            /* Read directory. */
             fat12_read_directory(&entries, &entries_len, cluster);
 
-            // Clear buffer.
+            /* Clear buffer. */
             strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
             i = 0;
             j++;
@@ -266,18 +266,18 @@ fs_dir *fat12_opendir(string path)
 {
     info("opendir, path=%s", path);
 
-    // Format path.
+    /* Format path. */
     strtrim(path, '/');
 
     if (!strlen(path))
     {
-        // Create directory.
+        /* Create directory. */
         fs_dir *dir = (fs_dir *)malloc(sizeof(fs_dir));
         dir->ref = 0;
         return dir;
     }
 
-    // Read root directory.
+    /* Read root directory. */
     fat12_directory_entry *entries;
     size_t entries_len;
     fat12_read_directory(&entries, &entries_len, 0);
@@ -297,7 +297,7 @@ fs_dir *fat12_opendir(string path)
                 return NULL;
             }
 
-            // Find directory within directory.
+            /* Find directory within directory. */
             fat12_directory_entry *entry = NULL;
             for (size_t k = 0; k < entries_len; k++)
             {
@@ -309,27 +309,27 @@ fs_dir *fat12_opendir(string path)
                 }
             }
 
-            // Check if the directory was found.
+            /* Check if the directory was found. */
             if (entry == NULL)
             {
                 warn("%s", "cannot find directory");
                 return NULL;
             }
 
-            // Create directory.
+            /* Create directory. */
             fs_dir *dir = (fs_dir *)malloc(sizeof(fs_dir));
             dir->ref = (entry->cluster_high << 16) | entry->cluster_low;
 
             memset(dir->name, '\0', FILE_NAME_LENGTH);
             fat12_format_dir_name(entry->filename, dir->name);
 
-            // Deallocate previous buffer.
+            /* Deallocate previous buffer. */
             free(entries);
             return dir;
         }
         else if (path[j] == '/' && path[j + 1] != '\0')
         {
-            // Find directory within directory.
+            /* Find directory within directory. */
             fat12_directory_entry *entry = NULL;
             for (size_t i = 0; i < entries_len; i++)
             {
@@ -341,21 +341,21 @@ fs_dir *fat12_opendir(string path)
                 }
             }
 
-            // Check if the directory was found.
+            /* Check if the directory was found. */
             if (entry == NULL)
             {
                 error("%s", "cannot find directory");
                 return NULL;
             }
 
-            // Compute cluster and deallocate previous buffer.
+            /* Compute cluster and deallocate previous buffer. */
             uint16_t cluster = (entry->cluster_high << 16) | entry->cluster_low;
             free(entries);
 
-            // Read directory.
+            /* Read directory. */
             fat12_read_directory(&entries, &entries_len, cluster);
 
-            // Clear buffer.
+            /* Clear buffer. */
             strset(buffer, ' ', FAT12_FILENAME_LENGTH + 1);
             i = 0;
             j++;
@@ -398,17 +398,17 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
         return;
     }
 
-    // Compute clusters and offsets.
+    /* Compute clusters and offsets. */
     size_t cluster_begin = file->offset / bpb->bytes_per_sector / bpb->sectors_per_cluster;
     size_t offset_begin = file->offset % (bpb->bytes_per_sector * bpb->sectors_per_cluster);
     size_t cluster_end = (file->offset + len) / bpb->bytes_per_sector / bpb->sectors_per_cluster;
     size_t offset_end = (file->offset + len) % (bpb->bytes_per_sector * bpb->sectors_per_cluster);
 
-    // Allocate buffer to copy slices from.
+    /* Allocate buffer to copy slices from. */
     uint8_t *src_buffer = (uint8_t *)malloc(bpb->bytes_per_sector * bpb->sectors_per_cluster);
     uint8_t *dest_buffer = (uint8_t *)buffer;
 
-    // Iterate the cluster chain from the start.
+    /* Iterate the cluster chain from the start. */
     size_t cluster = file->ref;
     size_t dest_offset = 0;
     size_t src_offset = 0;
@@ -424,11 +424,11 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
 
         if (i >= cluster_begin && i <= cluster_end)
         {
-            // Read cluster.
+            /* Read cluster. */
             uint32_t lba = fat12_cluster_lba(cluster);
             ata_read((uint16_t *)src_buffer, ata_bus, lba, bpb->sectors_per_cluster);
 
-            // Determine slice of buffer to copy to destination buffer.
+            /* Determine slice of buffer to copy to destination buffer. */
             if (i == cluster_begin && i == cluster_end)
             {
                 src_offset = offset_begin;
@@ -445,13 +445,13 @@ void fat12_read(fs_file *file, uint32_t *buffer, uint32_t len)
                 src_len = offset_end;
             }
 
-            // Copy slice and increment buffer and file offset.
+            /* Copy slice and increment buffer and file offset. */
             memcpy((void *)&dest_buffer[dest_offset], (void *)&src_buffer[src_offset], src_len);
             dest_offset += src_len;
             file->offset += src_len;
         }
 
-        // Get next cluster, if any.
+        /* Get next cluster, if any. */
         if (i != cluster_end)
         {
             cluster = fat12_read_fat(cluster);
@@ -465,7 +465,7 @@ void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __a
 {
     info("readdir, dir=%s, ref=%x", dir->name, dir->ref);
 
-    // Read directory.
+    /* Read directory. */
     fat12_directory_entry *entries;
     size_t entries_len;
     fat12_read_directory(&entries, &entries_len, dir->ref);
@@ -486,7 +486,7 @@ void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __a
             continue;
         }
 
-        // Allocate buffer for each directory entry.
+        /* Allocate buffer for each directory entry. */
         if (*dirents == NULL)
         {
             *dirents = (fs_dirent *)malloc(sizeof(fs_dirent));
@@ -496,7 +496,7 @@ void fat12_readdir(fs_dir *dir, __attribute__((unused)) fs_dirent **dirents, __a
             *dirents = (fs_dirent *)realloc(*dirents, ((*len) + 1) * sizeof(fs_dirent));
         }
 
-        // Create entry depending on attributes.
+        /* Create entry depending on attributes. */
         fs_dirent* dirent = &(*dirents)[(*len)];
         switch (entries[i].attributes)
         {
@@ -535,16 +535,16 @@ void fat12_seek(fs_file *file, uint32_t offset)
 
 fs_driver *fat12_init(const fat12_extended_bios_parameter_block *bios_parameter_block)
 {
-    // Compute offsets within drive.
+    /* Compute offsets within drive. */
     bpb = (fat12_extended_bios_parameter_block *)(uint32_t)bios_parameter_block;
     lba_fat1 = bpb->reserved_sectors;
     lba_root = lba_fat1 + bpb->sectors_per_fat * bpb->fats;
     lba_data = lba_root + bpb->directory_entries * FAT12_DIRECTORY_ENTRY_SIZE / bpb->bytes_per_sector;
 
-    // TODO: Accept parameter for ATA bus.
+    /* TODO: Accept parameter for ATA bus. */
     ata_bus = ATA_BUS_PRIMARY;
 
-    // Create driver.
+    /* Create driver. */
     fs_driver *driver = (fs_driver *)malloc(sizeof(fs_driver));
     driver->mnt = DRIVER_MOUNT_UNASSIGNED;
     driver->open = fat12_open;
