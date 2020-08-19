@@ -57,10 +57,6 @@ void main(const boot_info *boot_info)
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
-    // scheduler_start(process_create((uint32_t *)&clock));
-    scheduler_start(process_create((uint32_t *)task_a));
-    scheduler_start(process_create((uint32_t *)task_b));
-
     // Enable scheduler.
     scheduler_enable();
 
