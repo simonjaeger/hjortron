@@ -4,15 +4,22 @@
 #include <stdint.h>
 #include "string.h"
 
+typedef struct text_data
+{
+    char code;
+    uint8_t foreground : 4;
+    uint8_t background : 4;
+} __attribute__((packed)) text_data;
+
 typedef struct text_attribute
 {
     uint8_t background;
     uint8_t foreground;
 } text_attribute;
 
-void display_init();
-void display_destroy();
-void display_clear();
+void display_init(void);
+void display_destroy(void);
+void display_clear(void);
 
 void putc(const char c);
 void puts(string str);
