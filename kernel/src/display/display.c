@@ -13,17 +13,10 @@
 #define CURSOR_SCANLINE_START 0
 #define CURSOR_SCANLINE_END 15
 
-typedef struct text_data
-{
-    char code;
-    uint8_t foreground : 4;
-    uint8_t background : 4;
-} __attribute__((packed)) text_data;
-
 static text_data *buffer = (text_data *)DISPLAY_MEMORY;
 static size_t cursor = 0;
 
-void display_init()
+void display_init(void)
 {
     outb(0x3D4, 0x0A);
     outb(0x3D5, (inb(0x3D5) & 0xC0) | CURSOR_SCANLINE_START);
@@ -33,13 +26,13 @@ void display_init()
     display_clear();
 }
 
-void display_destroy()
+void display_destroy(void)
 {
     outb(0x3D4, 0x0A);
     outb(0x3D5, 0x20);
 }
 
-void display_clear()
+void display_clear(void)
 {
     for (size_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++)
     {

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include "kernel.h"
 #include "string.h"
 #include "memory/malloc.h"
@@ -12,6 +13,7 @@
 #include "drivers/pci.h"
 #include "drivers/serial.h"
 #include "drivers/ata.h"
+#include "drivers/cmos.h"
 #include "debug.h"
 #include "cpu/boot.h"
 #include "cpu/exceptions.h"
@@ -102,6 +104,8 @@ void main(const boot_info *boot_info)
     // }
 
     // // Test syscall.
+    // asm volatile("int $0x80" ::"a"(SYSCALL_SLEEP), "b"(500));
+    // asm volatile("int $0x80" ::"a"(SYSCALL_STOP));
     // uint32_t test;
     // asm volatile("int $0x80" ::"a"(1), "b"(&test));
     // debug("%x", test);

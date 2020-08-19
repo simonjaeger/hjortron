@@ -2,6 +2,7 @@
 #include "execution/scheduler.h"
 #include "memory/malloc.h"
 #include "display/display.h"
+#include "drivers/pit.h"
 #include "debug.h"
 #include "assert.h"
 #include "list.h"
@@ -22,8 +23,36 @@ void scheduler_init(void)
     info("%s", "initialized");
 }
 
+process_t *scheduler_next()
+{
+    node_t *node = list->head;
+    if (current != NULL)
+    {
+        node = list_find(list, current);
+    }
+
+    for (size_t i = 0; i < list->length; i++)
+    {
+        node = node->next;
+        if (node == NULL)
+        {
+            node = list->head;
+        }
+
+        // Check if process is waiting.
+        if (((process_t *)node->value)->state == PROCESS_STATE_WAITING)
+        {
+            return node->value;
+        }
+    }
+    return NULL;
+}
+
 void scheduler_switch()
 {
+    // Select next process.
+    current = scheduler_next();
+
     // Switch stack and resume execution.
     if (current == NULL)
     {
@@ -32,18 +61,35 @@ void scheduler_switch()
     }
     else if (current != NULL)
     {
+        current->state = PROCESS_STATE_RUNNING;
         asm volatile("mov %%eax, %%esp" ::"a"((uint32_t)current->esp));
     }
     asm volatile("jmp isr_restore");
 }
 
-void scheduler_handle_irq(regs *r)
+void scheduler_handle_irq(const regs *r)
 {
     assert(r);
 
-    if (!enabled || list->length == 0)
+    if (!enabled)
     {
         return;
+    }
+
+    // Decrement sleep counters.
+    for (node_t *node = list->head; node != NULL; node = node->next)
+    {
+        process_t *process = (process_t *)node->value;
+        if (process->state == PROCESS_STATE_SLEEPING)
+        {
+            if (process->sleep == 0)
+            {
+                info("awake, id=%d", process->id);
+                process->state = PROCESS_STATE_WAITING;
+                continue;
+            }
+            process->sleep--;
+        }
     }
 
     if (current == NULL)
@@ -51,24 +97,12 @@ void scheduler_handle_irq(regs *r)
         // Save kernel stack so that it can be restored
         // when there are no running processes.
         esp = (uint32_t *)r;
-
-        current = list->head->value;
     }
     else
     {
         // Save process stack.
         current->esp = (uint32_t *)r;
-
-        // Select next process.
-        node_t *node = list_find(list, current);
-        if (node->next == NULL)
-        {
-            current = list->head->value;
-        }
-        else
-        {
-            current = node->next->value;
-        }
+        current->state = PROCESS_STATE_WAITING;
     }
 
     scheduler_switch();
@@ -91,7 +125,15 @@ process_t *scheduler_process(void)
     return current;
 }
 
-void scheduler_kill(process_t *process)
+void scheduler_start(process_t *process)
+{
+    assert(process);
+
+    list_insert(list, process);
+    info("start, id=%d", process->id);
+}
+
+void scheduler_stop(process_t *process)
 {
     assert(process);
 
@@ -99,18 +141,32 @@ void scheduler_kill(process_t *process)
     process_destroy(process);
     info("kill, id=%d", process->id);
 
-    // Select a new process if the current one is
-    // being killed.
     if (current == process)
     {
-        if (list->length > 0)
-        {
-            current = list->head->value;
-        }
-        else
-        {
-            current = NULL;
-        }
+        current = NULL;
+        scheduler_switch();
+    }
+}
+
+void scheduler_sleep(process_t *process, size_t ms, const regs *r)
+{
+    assert(process);
+
+    // Compute ticks based on PIT configuration as scheduler
+    // is dependent on PIT interrupts.
+    size_t ticks = ms * PIT_INTERRUPTS_PER_SECOND / 1000;
+
+    info("sleep, id=%d, ticks=%d", process->id, ticks);
+
+    process->state = PROCESS_STATE_SLEEPING;
+    process->sleep = ticks;
+
+    if (current == process)
+    {
+        // Save process stack.
+        current->esp = (uint32_t *)r;
+
+        current = NULL;
         scheduler_switch();
     }
 }

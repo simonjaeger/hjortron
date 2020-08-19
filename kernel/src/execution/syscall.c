@@ -16,8 +16,11 @@ void syscall_handle_irq(const regs *r)
     // Type of syscall.
     switch (r->eax)
     {
-    case SYSCALL_KILL:
-        scheduler_kill(process);
+    case SYSCALL_STOP:
+        scheduler_stop(process);
+        break;
+    case SYSCALL_SLEEP:
+        scheduler_sleep(process, (size_t)r->ebx, r);
         break;
     case SYSCALL_TEST:
         *((uint32_t *)r->ebx) = 0xFFFF;

@@ -23,6 +23,8 @@ process_t *process_create(uint32_t *eip)
     process->ebp = (uint32_t *)(stack + PROCESS_STACK_LENGTH);
     process->esp = (uint32_t *)(stack + PROCESS_STACK_LENGTH - sizeof(regs));
     process->eip = eip;
+    process->state = PROCESS_STATE_WAITING;
+    process->sleep = 0;
 
     // Create stack.
     regs *r = (regs *)process->esp;

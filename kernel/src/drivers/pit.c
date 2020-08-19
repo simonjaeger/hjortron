@@ -11,9 +11,6 @@
 #define PIT_CHANNEL2_DATA 0x42
 #define PIT_COMMAND 0x43
 
-#define PIT_OSCILLATOR_HZ 1193182
-#define PIT_INTERRUPTS_PER_SECOND 100
-
 static size_t ticks = 0;
 
 void pit_handle_irq(const regs *r)
@@ -24,7 +21,7 @@ void pit_handle_irq(const regs *r)
 
 void pit_init()
 {
-    // Configure PIT with square wave, not BCD.
+    // Configure PIT with square wave, without BCD.
     outb(PIT_COMMAND, 0x36);
 
     uint16_t data = PIT_OSCILLATOR_HZ / PIT_INTERRUPTS_PER_SECOND;
