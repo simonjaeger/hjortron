@@ -21,7 +21,7 @@ typedef struct fat12_extended_bios_parameter_block
     uint32_t hidden_sectors;
     uint32_t large_sectors;
 
-    // Extended boot record (FAT12).
+    /* Extended boot record (FAT12). */
     uint8_t drive_number;
     uint8_t reserved;
     uint8_t signature;

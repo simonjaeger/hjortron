@@ -4,8 +4,8 @@
 #include "debug.h"
 #include "memory/malloc.h"
 
-// #define ATA_BUS_PRIMARY 0x1F0
-// #define ATA_BUS_SECONDARY 0x170
+/* #define ATA_BUS_PRIMARY 0x1F0 */
+/* #define ATA_BUS_SECONDARY 0x170 */
 
 #define ATA_DISK_PRIMARY 0xA0
 #define ATA_DISK_SECONDARY 0xB0
@@ -35,47 +35,45 @@ void ata_wait(uint16_t bus)
 void ata_poll(uint16_t bus)
 {
     uint8_t status;
-    // Wait until the BSY bit is cleared.
+    /* Wait until the BSY bit is cleared. */
     while ((status = inb(bus + ATA_OFFSET_STATUS)) & 0x80)
-    {
-    }
+        ;
 
-    // Wait until the DRQ bit is set.
-    // TODO: Check for ERR bit.
+    /* Wait until the DRQ bit is set. */
+    /* TODO: Check for ERR bit. */
     while (!((status = inb(bus + ATA_OFFSET_STATUS)) & 0x8))
-    {
-    }
+        ;
 }
 
 void ata_identify(uint16_t bus, size_t disk)
 {
-    // Select disk.
+    /* Select disk. */
     outb(bus + ATA_OFFSET_DRIVE, disk);
 
-    // Reset sector count and LBA.
+    /* Reset sector count and LBA. */
     outb(bus + ATA_OFFSET_SECTOR_COUNT, 0);
     outb(bus + ATA_OFFSET_LBA0, 0);
     outb(bus + ATA_OFFSET_LBA1, 0);
     outb(bus + ATA_OFFSET_LBA2, 0);
 
-    // Send identify command.
+    /* Send identify command. */
     outb(bus + ATA_OFFSET_COMMAND, 0xEC);
 
-    // Check for drive.
+    /* Check for drive. */
     uint8_t status = inb(bus + ATA_OFFSET_STATUS);
     if (!status)
     {
         info("no drive, bus=%s, drive=%s",
-              bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
-              disk == ATA_DISK_PRIMARY ? "primary" : "secondary");
+             bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
+             disk == ATA_DISK_PRIMARY ? "primary" : "secondary");
         return;
     }
 
     ata_poll(bus);
 
-    // TODO: Check LBA ports for non-zero (not ATA).
+    /* TODO: Check LBA ports for non-zero (not ATA). */
 
-    // Check for ERR bit.
+    /* Check for ERR bit. */
     if (status & 0x01)
     {
         error("drive error, bus=%s, drive=%s",
@@ -84,7 +82,7 @@ void ata_identify(uint16_t bus, size_t disk)
         return;
     }
 
-    // Read data for disk.
+    /* Read data for disk. */
     uint16_t *data = (uint16_t *)malloc(sizeof(uint16_t) * 256);
     for (size_t i = 0; i < 256; i++)
     {
@@ -104,9 +102,9 @@ void ata_identify(uint16_t bus, size_t disk)
     strtrim(model_number, ' ');
 
     info("detected drive, bus=%s, drive=%s, model_number=%s",
-          bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
-          disk == ATA_DISK_PRIMARY ? "primary" : "secondary",
-          model_number);
+         bus == ATA_BUS_PRIMARY ? "primary" : "secondary",
+         disk == ATA_DISK_PRIMARY ? "primary" : "secondary",
+         model_number);
 }
 
 void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_count)
@@ -130,7 +128,7 @@ void ata_read(uint16_t *buffer, uint16_t bus, uint32_t lba, uint32_t sector_coun
 
         for (size_t j = 0; j < 256; j++)
         {
-            // TODO: Read bytes per sector from disk parameters.
+            /* TODO: Read bytes per sector from disk parameters. */
             buffer[i * 256 + j] = inw(bus);
         }
     }

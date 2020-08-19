@@ -27,7 +27,7 @@
 
 void main(const boot_info *boot_info)
 {
-    // Display environment information.
+    /* Display environment information. */
     display_init();
     printf("%f(kernel)\n", (text_attribute){COLOR_CYAN, COLOR_WHITE});
 
@@ -35,10 +35,10 @@ void main(const boot_info *boot_info)
     cpuid_info(&boot_info->cpuid);
     mmap_info(&boot_info->memory_map);
 
-    // Initialize dynamic memory.
+    /* Initialize dynamic memory. */
     malloc_init(&boot_info->memory_map);
 
-    // Initialize IRQ's.
+    /* Initialize IRQ's. */
     exceptions_init();
     irq_init();
     pic_init();
@@ -46,21 +46,21 @@ void main(const boot_info *boot_info)
     syscall_init();
     scheduler_init();
 
-    // Initialize drivers.
+    /* Initialize drivers. */
     pit_init();
     keyboard_init();
     pci_init();
     serial_init(SERIAL_COM1);
     ata_init();
 
-    // TODO: Skip if there is no disk on primary ATA bus.
+    /* TODO: Skip if there is no disk on primary ATA bus. */
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
 
-    // Enable scheduler.
+    /* Enable scheduler. */
     scheduler_enable();
 
-    // // Test ELF load.
+    // /* Test ELF load. */
     // fs_file *file = fs_open("/H/APPS/TEST.ELF");
     // if (file == NULL)
     // {
@@ -68,20 +68,20 @@ void main(const boot_info *boot_info)
     // }
     // else
     // {
-    //     // Read file.
+    //     /* Read file. */
     //     void *elf_buffer;
     //     uint32_t elf_entry;
     //     elf_read(file, &elf_buffer, &elf_entry);
     //     __attribute__((unused)) uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
 
-    //     // Close file.
+    //     /* Close file. */
     //     fs_close(file);
 
-    //     // Run file.
-    //     // elf_main();
+    //     /* Run file. */
+    //     elf_main();
     // }
 
-    // // Test readdir.
+    // /* Test readdir. */
     // fs_dir *dir = fs_opendir("/H/APPS");
     // if (dir == NULL)
     // {
@@ -103,7 +103,7 @@ void main(const boot_info *boot_info)
     //     fs_closedir(dir);
     // }
 
-    // // Test syscall.
+    // /* Test syscall. */
     // asm volatile("int $0x80" ::"a"(SYSCALL_SLEEP), "b"(500));
     // asm volatile("int $0x80" ::"a"(SYSCALL_STOP));
     // uint32_t test;

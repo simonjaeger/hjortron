@@ -155,13 +155,13 @@ void handle_irq(__attribute__((unused)) const regs *r)
 
     switch (key)
     {
-    // Ignored scan codes.
+    /* Ignored scan codes. */
     case 0xFA:
     case 0x45:
     case 0xC5:
         break;
 
-    // Mapped scan codes.
+    /* Mapped scan codes. */
     case 0x02:
         kc = NUM_1;
         break;

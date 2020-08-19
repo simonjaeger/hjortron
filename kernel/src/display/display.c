@@ -45,7 +45,7 @@ void display_clear(void)
 
 void display_update_cursor()
 {
-    // Shift buffer if needed to show the next row.
+    /* Shift buffer if needed to show the next row. */
     if (cursor >= DISPLAY_WIDTH * DISPLAY_HEIGHT)
     {
         cursor = DISPLAY_WIDTH * (DISPLAY_HEIGHT - 1);
@@ -63,7 +63,7 @@ void display_update_cursor()
         }
     }
 
-    // Update cursor position.
+    /* Update cursor position. */
     outb(0x3D4, 0x0F);
     outb(0x3D5, (uint8_t)(cursor & 0xFF));
     outb(0x3D4, 0x0E);
@@ -79,13 +79,13 @@ void putcf(const char c, const text_attribute attribute)
 
     if (c == '\n')
     {
-        // Increment cursor to the next line.
+        /* Increment cursor to the next line. */
         cursor += DISPLAY_WIDTH - (cursor % DISPLAY_WIDTH);
         display_update_cursor();
         return;
     }
 
-    // Set text data.
+    /* Set text data. */
     buffer[cursor].code = c;
     buffer[cursor].foreground = attribute.foreground;
     buffer[cursor].background = attribute.background;
@@ -129,18 +129,20 @@ void put_hex(size_t count)
 
 void printf(const string str, ...)
 {
-    // Get variable list.
+    /* Get variable list. */
     va_list ap;
     va_start(ap, str);
 
-    // Create default attribute.
+    /* Create default attribute. */
     text_attribute attribute = {DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 
     size_t len = strlen(str);
     for (size_t i = 0; i < len; i++)
     {
-        // Check if the next character is a formatted argument. Subsequently
-        // the type of the formatted argument (%s, %d, ...) should follow.
+        /* 
+         * Check if the next character is a formatted argument. Subsequently
+         * the type of the formatted argument (%s, %d, ...) should follow.
+         */
         if (str[i] == '%' && i + 1 < len)
         {
             switch (str[i + 1])
@@ -153,7 +155,7 @@ void printf(const string str, ...)
             break;
             case 'd':
             {
-                // Convert argument to base 10.
+                /* Convert argument to base 10. */
                 uint32_t arg = __builtin_va_arg(ap, uint32_t);
                 char buffer[32];
                 itoa(arg, buffer, 10);
@@ -162,7 +164,7 @@ void printf(const string str, ...)
             break;
             case 'x':
             {
-                // Convert argument to base 16.
+                /* Convert argument to base 16. */
                 uint32_t arg = __builtin_va_arg(ap, uint32_t);
                 char buffer[32];
                 itoa(arg, buffer, 16);
@@ -179,7 +181,7 @@ void printf(const string str, ...)
                     {
                     case 'd':
                     {
-                        // Convert argument to base 10.
+                        /* Convert argument to base 10. */
                         uint64_t arg = __builtin_va_arg(ap, uint64_t);
                         char buffer[32];
                         itoa(arg, buffer, 10);
@@ -188,7 +190,7 @@ void printf(const string str, ...)
                     break;
                     case 'x':
                     {
-                        // Convert argument to base 16.
+                        /* Convert argument to base 16. */
                         uint64_t arg = __builtin_va_arg(ap, uint64_t);
                         char buffer[32];
                         itoa(arg, buffer, 16);

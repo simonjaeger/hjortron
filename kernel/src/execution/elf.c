@@ -78,16 +78,16 @@ string elf_str(const elf_header *header, const size_t idx)
 
 void elf_read(fs_file *file, void **buffer, uint32_t *entry)
 {
-    // Read file.
+    /* Read file. */
     uint8_t *file_buffer = (uint8_t *)malloc(file->len);
     fs_read(file, (uint32_t *)file_buffer, file->len);
 
-    // Check file and support.
+    /* Check file and support. */
     const elf_header *header = (elf_header *)file_buffer;
     assert(elf_check_file(header));
     assert(elf_check_support(header));
 
-    // Compute length of buffer.
+    /* Compute length of buffer. */
     size_t len = 0;
     for (size_t i = 0; i < header->e_shnum; i++)
     {
@@ -102,7 +102,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     uint8_t *reloc_buffer = (uint8_t *)malloc(len);
     memset(reloc_buffer, 0, len);
 
-    // Copy data to buffer.
+    /* Copy data to buffer. */
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -119,7 +119,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
         memcpy(&reloc_buffer[sh->sh_addr], &file_buffer[sh->sh_offset], sh->sh_size);
     }
 
-    // Go through each symbol to relocate.
+    /* Go through each symbol to relocate. */
     for (size_t i = 0; i < header->e_shnum; i++)
     {
         const elf_section_header *sh = elf_find_sh(header, i);
@@ -153,7 +153,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
                 return;
             }
 
-            // Compute symbol value.
+            /* Compute symbol value. */
             uint32_t value = 0;
             if (sym->st_shndx == SHN_ABS)
             {
@@ -164,7 +164,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
                 value = (uint32_t)reloc_buffer + sym->st_value + elf_find_sh(header, sym->st_shndx)->sh_addr;
             }
 
-            // Relocate symbol.
+            /* Relocate symbol. */
             uint32_t *target = (uint32_t *)&reloc_buffer[info_sh->sh_addr + rels[j].r_offset];
             if (!elf_rel_sym(type, target, value))
             {

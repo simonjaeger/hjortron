@@ -114,13 +114,13 @@ void pci_init()
         {
             uint32_t header_type = pci_header_type(b, d, 0);
 
-            // Check if the device is a multiple functions.
+            /* Check if the device is a multiple functions. */
             bool multifunction = header_type & (1 << 7);
             size_t functions = multifunction ? PCI_MAX_FUNCTIONS : 1;
 
             for (size_t f = 0; f < functions; f++)
             {
-                // Reuse the header type for the first function.
+                /* Reuse the header type for the first function. */
                 if (f > 0)
                 {
                     header_type = pci_header_type(b, d, f);
@@ -134,7 +134,7 @@ void pci_init()
                     continue;
                 }
 
-                // Create device.
+                /* Create device. */
                 pci_device *device = (pci_device *)malloc(sizeof(pci_device));
                 device->bus = b;
                 device->device = d;

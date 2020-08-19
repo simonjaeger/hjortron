@@ -24,7 +24,6 @@ void display_clear(void);
 void putc(const char c);
 void puts(string str);
 
-// TODO: Share implementation with sprintf? How to deal with the buffer...?
 void printf(const string str, ...);
 
 #endif // DISPLAY_DISPLAY_H_

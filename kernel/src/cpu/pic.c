@@ -20,31 +20,31 @@
 
 void pic_init()
 {
-    // Initialize.
+    /* Initialize. */
     outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
     wait();
     outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
     wait();
 
-    // Set new offsets for interrupts.
+    /* Set new offsets for interrupts. */
     outb(PIC1_DATA, PIC1_OFFSET);
     wait();
     outb(PIC2_DATA, PIC2_OFFSET);
     wait();
 
-    // Set identity.
+    /* Set identity. */
     outb(PIC1_DATA, ICW1_SINGLE);
     wait();
     outb(PIC2_DATA, ICW1_INTERVAL4);
     wait();
 
-    // Set 8086/88 (MCS-80/85) mode.
+    /* Set 8086/88 (MCS-80/85) mode. */
     outb(PIC1_DATA, ICW4_8086);
     wait();
     outb(PIC2_DATA, ICW4_8086);
     wait();
 
-    // Set masks.
+    /* Set masks. */
     outb(PIC1_DATA, 0x0);
     outb(PIC2_DATA, 0x0);
 
@@ -53,7 +53,7 @@ void pic_init()
 
 void pic_eoi(uint8_t irq)
 {
-    // Acknowledge interrupts within range.
+    /* Acknowledge interrupts within range. */
     if (irq >= PIC1_OFFSET && irq <= (PIC2_OFFSET + 7))
     {
         outb(PIC1_COMMAND, PIC_EOI);

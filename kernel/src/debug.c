@@ -26,7 +26,7 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
     char buffer[1024];
     strset(buffer, '\0', 1024);
 
-    // Print prefix.
+    /* Print prefix. */
     string type_str = "";
     switch (type)
     {
@@ -67,7 +67,7 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
         break;
     }
 
-    // Print time.
+    /* Print time. */
     time_t time = cmos_time();
     sprintf(buffer, time.hour < 10 ? "0%d:" : "%d:", time.hour);
     dputs(buffer);
@@ -76,11 +76,11 @@ void dprintf(size_t type, string file, __attribute__((unused)) const char *funct
     sprintf(buffer, time.second < 10 ? "0%d " : "%d ", time.second);
     dputs(buffer);
 
-    // Print debug info.
+    /* Print debug info. */
     sprintf(buffer, "%s %s:%d: ", type_str, &file[4], line);
     dputs(buffer);
 
-    // Print string.
+    /* Print string. */
     va_list ap;
     va_start(ap, format);
     sprintf_va(buffer, format, ap);

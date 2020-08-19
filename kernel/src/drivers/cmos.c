@@ -38,7 +38,7 @@ time_t cmos_time()
     while (cmos_wait())
         ;
 
-    // Read RTC registers.
+    /* Read RTC registers. */
     time.second = cmos_read(CMOS_RTC_SECOND);
     time.minute = cmos_read(CMOS_RTC_MINUTE);
     time.hour = cmos_read(CMOS_RTC_HOUR);
@@ -48,7 +48,7 @@ time_t cmos_time()
 
     uint8_t status = cmos_read(0xB);
 
-    // Convert BCD to binary.
+    /* Convert BCD to binary. */
     if (!(status & 0x4))
     {
         time.second = (time.second & 0xF) + ((time.second / 16) * 10);
@@ -59,7 +59,7 @@ time_t cmos_time()
         time.year = (time.year & 0xF) + ((time.year / 16) * 10);
     }
 
-    // Convert 12 hour clock to 24 hour clock.
+    /* Convert 12 hour clock to 24 hour clock. */
     if (!(status & 0x02) && (time.hour & 0x80))
     {
         time.hour = ((time.hour & 0x7F) + 12) % 24;

@@ -45,7 +45,7 @@ void strtrim(string str, char c)
         break;
     }
 
-    // TODO: Trim start.
+    /* TODO: Trim start. */
 }
 
 void strset(string str, char c, size_t len)
@@ -74,14 +74,16 @@ string reverse(string str, size_t i, size_t j)
 
 string itoa(int32_t i, string str, size_t base)
 {
-    // Check if base is valid.
+    /* Check if base is valid. */
     if (base < 2 || base > 32)
     {
         return str;
     }
 
-    // Only handle negative numbers for base 10. Standard
-    // behavior of itoa() function.
+    /*
+     * Only handle negative numbers for base 10. Standard
+     * behavior of itoa() function.
+     */
     bool negative = i < 0 && base == 10;
     if (negative)
     {
@@ -92,7 +94,7 @@ string itoa(int32_t i, string str, size_t base)
     while (i)
     {
         size_t r = i % base;
-        // Check if a character should be added, otherwise add a digit.
+        /* Check if a character should be added, otherwise add a digit. */
         if (r >= 10)
         {
             str[j++] = 65 + r - 10;
@@ -105,7 +107,7 @@ string itoa(int32_t i, string str, size_t base)
         i = i / base;
     }
 
-    // Handle zero explicitly.
+    /* Handle zero explicitly. */
     if (j == 0)
     {
         str[j++] = '0';
@@ -115,10 +117,10 @@ string itoa(int32_t i, string str, size_t base)
         str[j++] = '-';
     }
 
-    // Add null terminator.
+    /* Add null terminator. */
     str[j] = '\0';
 
-    // Reverse string.
+    /* Reverse string. */
     return reverse(str, 0, j - 1);
 }
 
@@ -136,16 +138,16 @@ void sprintf_va(string str, string format, va_list ap)
     size_t len = strlen(format);
     for (size_t i = 0; i < len; i++)
     {
-        // Copy standard characters.
+        /* Copy standard characters. */
         while (format[i] != '%' && i < len)
         {
             str[j++] = format[i++];
         }
 
-        // Check for missing format type.
+        /* Check for missing format type. */
         if (++i >= len)
         {
-            // TODO: Handle error.
+            /* TODO: Handle error. */
             continue;
         }
 
@@ -192,10 +194,10 @@ void sprintf_va(string str, string format, va_list ap)
         break;
         case 'l':
         {
-            // Check for missing format type.
+            /* Check for missing format type. */
             if (++i >= len)
             {
-                // TODO: Handle error.
+                /* TODO: Handle error. */
                 continue;
             }
 

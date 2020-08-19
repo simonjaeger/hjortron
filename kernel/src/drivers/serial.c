@@ -7,15 +7,15 @@
 
 void serial_init(uint32_t port)
 {
-    // Disable interrupts.
+    /* Disable interrupts. */
     outb(port + 1, 0x00);
 
-    // Set speed of serial line.
+    /* Set speed of serial line. */
     outb(port + 3, 0x80);
     outb(port + 0, 0x03);
     outb(port + 1, 0x00);
 
-    // Set data bits.
+    /* Set data bits. */
     outb(port + 3, SERIAL_DATA_BITS_8);
 }
 
@@ -26,7 +26,7 @@ int serial_ready(uint16_t port)
 
 void serial_putc(uint32_t port, char c)
 {
-    // Wait for transmission buffer to be empty.
+    /* Wait for transmission buffer to be empty. */
     while (!serial_ready(port))
         ;
     outb(port, c);
