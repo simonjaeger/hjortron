@@ -96,7 +96,11 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
         {
             continue;
         }
-        len += sh->sh_size;
+
+        if (len < sh->sh_addr + sh->sh_size)
+        {
+            len = sh->sh_addr + sh->sh_size;
+        }
     }
 
     uint8_t *reloc_buffer = (uint8_t *)malloc(len);
