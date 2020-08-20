@@ -104,7 +104,6 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
     }
 
     uint8_t *reloc_buffer = (uint8_t *)malloc(len);
-
     memset(reloc_buffer, 0, len);
 
     /* Copy data to buffer. */
