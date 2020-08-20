@@ -96,10 +96,15 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
         {
             continue;
         }
-        len += sh->sh_size;
+
+        if (len < sh->sh_addr + sh->sh_size)
+        {
+            len = sh->sh_addr + sh->sh_size;
+        }
     }
 
     uint8_t *reloc_buffer = (uint8_t *)malloc(len);
+
     memset(reloc_buffer, 0, len);
 
     /* Copy data to buffer. */
@@ -154,7 +159,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
             }
 
             /* Compute symbol value. */
-            uint32_t value = 0;
+            __attribute__((unused))uint32_t value = 0;
             if (sym->st_shndx == SHN_ABS)
             {
                 value = sym->st_value;
