@@ -159,7 +159,7 @@ void elf_read(fs_file *file, void **buffer, uint32_t *entry)
             }
 
             /* Compute symbol value. */
-            __attribute__((unused))uint32_t value = 0;
+            uint32_t value = 0;
             if (sym->st_shndx == SHN_ABS)
             {
                 value = sym->st_value;
