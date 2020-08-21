@@ -3,6 +3,7 @@
 
 #define SYSCALL_STOP 0x1
 #define SYSCALL_SLEEP 0x23
+#define SYSCALL_EXIT 0x3C
 #define SYSCALL_TEST 0xFF
 
 void syscall_init();

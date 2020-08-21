@@ -1,11 +1,12 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include "string.h"
 #include "display/display.h"
-
-static const uint32_t data = 0x1234;
+#include "stdlib.h"
 
 int main()
 {
+    uint32_t data = lib_test();
     display_clear();
     printf("Hi! %x", data);
     return 0;

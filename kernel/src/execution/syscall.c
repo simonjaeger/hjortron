@@ -17,13 +17,14 @@ void syscall_handle_irq(const regs *r)
     switch (r->eax)
     {
     case SYSCALL_STOP:
+    case SYSCALL_EXIT:
         scheduler_stop(process);
         break;
     case SYSCALL_SLEEP:
         scheduler_sleep(process, (size_t)r->ebx, r);
         break;
     case SYSCALL_TEST:
-        *((uint32_t *)r->ebx) = 0xFFFF;
+        *((uint32_t *)r->ebx) = 0x1234;
         break;
 
     default:

@@ -112,14 +112,14 @@ void scheduler_handle_irq(const regs *r)
 
 void scheduler_enable(void)
 {
-    enabled = true;
     info("%s", "enabled");
+    enabled = true;
 }
 
 void scheduler_disable(void)
 {
-    enabled = false;
     info("%s", "disabled");
+    enabled = false;
 }
 
 process_t *scheduler_process(void)
