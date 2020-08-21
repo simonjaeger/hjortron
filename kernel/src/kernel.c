@@ -56,28 +56,28 @@ void main(const boot_info *boot_info)
     /* TODO: Skip if there is no disk on primary ATA bus. */
     fs_driver *fat12_driver = fat12_init((fat12_extended_bios_parameter_block *)(uint32_t)boot_info->bpb);
     fs_mount(fat12_driver, 'H');
-    /* Test ELF load. */
-    fs_file *file = fs_open("/H/APPS/TEST.ELF");
-    if (file == NULL)
-    {
-        printf("Could not open TEST.ELF.");
-    }
-    else
-    {
-        /* Read file. */
-        void *elf_buffer;
-        uint32_t elf_entry;
-        elf_read(file, &elf_buffer, &elf_entry);
-        uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
 
-        /* Close file. */
-        fs_close(file);
+    // /* Test ELF load. */
+    // fs_file *file = fs_open("/H/APPS/TEST.ELF");
+    // if (file == NULL)
+    // {
+    //     printf("Could not open TEST.ELF.");
+    // }
+    // else
+    // {
+    //     /* Read file. */
+    //     void *elf_buffer;
+    //     uint32_t elf_entry;
+    //     elf_read(file, &elf_buffer, &elf_entry);
+    //     uint32_t (*elf_main)(void) = (uint32_t(*)(void))((uint32_t)elf_buffer + elf_entry);
 
-        /* Run file. */
-        process_t *process = process_create((uint32_t *)elf_main);
-        scheduler_start(process);
-        // elf_main();
-    }
+    //     /* Close file. */
+    //     fs_close(file);
+
+    //     /* Run file. */
+    //     process_t *process = process_create((uint32_t *)elf_main);
+    //     scheduler_start(process);
+    // }
 
     /* Enable scheduler. */
     scheduler_enable();
